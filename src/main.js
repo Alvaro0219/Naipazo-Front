@@ -1,5 +1,5 @@
 import { createApp } from 'vue';
-import { Quasar, Notify } from 'quasar';
+import { Quasar, Dialog, Notify } from 'quasar';
 import quasarLang from 'quasar/lang/es';
 import { createPinia } from 'pinia';
 import router from './router/index.js';
@@ -12,7 +12,7 @@ import './styles/app-unified.css';
 
 const app = createApp(App);
 app.use(Quasar, {
-  plugins: { Notify },
+  plugins: { Notify, Dialog },
   lang: quasarLang,
   config: { notify: { position: 'top', timeout: 3500 } }
 });

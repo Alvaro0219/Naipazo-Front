@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia';
 import { loginApi, logoutApi, refreshApi, registerApi } from '../services/api.js';
+import { disconnectSocket } from '../composables/useSocket.js';
 import { useWalletStore } from './wallet.js';
 
 const STORAGE_KEY = 'truco_session';
@@ -58,6 +59,7 @@ export const useAuthStore = defineStore('auth', {
       this.user = null;
       localStorage.removeItem(STORAGE_KEY);
       useWalletStore().$reset();
+      disconnectSocket();
     },
     async logout() {
       const token = this.refreshToken;

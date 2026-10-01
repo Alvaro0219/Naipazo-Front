@@ -122,4 +122,38 @@ export async function fetchLedger({ page = 1, limit = 20 } = {}) {
   return unwrap(data, 'No se pudo cargar el historial', status);
 }
 
+// ─── Salas ──────────────────────────────────────────────
+
+/** { items, pagination } — salas en espera */
+export async function fetchRooms(params = {}) {
+  const { data, status } = await api.get('/rooms', { params });
+  return unwrap(data, 'No se pudieron cargar las mesas', status);
+}
+
+/** Sala en espera o en juego del usuario, o null */
+export async function fetchMyRoom() {
+  const { data, status } = await api.get('/rooms/mine');
+  return unwrap(data, 'No se pudo cargar tu mesa', status).room;
+}
+
+/** payload: { uuid, targetPoints, bet } */
+export async function createRoom(payload) {
+  const { data, status } = await api.post('/rooms', payload);
+  return unwrap(data, 'No se pudo crear la sala', status).room;
+}
+
+export async function joinRoom(roomId) {
+  const { data, status } = await api.post(`/rooms/${roomId}/join`);
+  return unwrap(data, 'No se pudo entrar a la sala', status).room;
+}
+
+export async function cancelRoom(roomId) {
+  const { data, status } = await api.delete(`/rooms/${roomId}`);
+  return unwrap(data, 'No se pudo cancelar la sala', status).room;
+}
+
+// ─── Tiempo real ────────────────────────────────────────
+
+export const WS_URL = import.meta.env.VITE_WS_URL || 'http://localhost:4000';
+
 export default api;

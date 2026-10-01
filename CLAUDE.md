@@ -30,6 +30,14 @@ npm run build    # dist/ (verificación de que todo compila; no hay tests ni lin
   `auth.applySession`, que alimenta a `wallet.ingest`, y este muestra el aviso "¡Recibiste tus N fichas de hoy!".
   El resto del estado vive en cada página.
 - **Router:** `meta.public`, `meta.guestOnly` y `meta.role`; un único `beforeEach` decide los accesos.
+  La mesa (`/mesa/:roomId`) va fuera de `AppLayout`, a pantalla completa.
+- **Tiempo real:** `composables/useSocket.js` mantiene **un solo** socket para toda la app (token en
+  `auth` como función, así cada reintento usa el token vigente; ante `UNAUTHORIZED` refresca y reconecta).
+  `stores/game.js` registra sus listeners una sola vez y, en cada `connect`, vuelve a emitir
+  `room:join` para que el servidor reenvíe `game:state` (así funciona la reconexión). Las acciones salen
+  por `game.sendAction(type, payload)` con un `actionId` uuid.
+- La mesa (`components/game/`) es solo presentación de `game.view`; los botones son
+  `view.availableActions` y los textos del log salen de `utils/gameText.js`.
 - **El front no implementa reglas de truco:** la mesa (M4) solo mostrará las acciones que el servidor manda
   en `availableActions`. Las reglas de `utils/validators.js` son solo feedback del formulario; el backend
   sigue siendo la autoridad.

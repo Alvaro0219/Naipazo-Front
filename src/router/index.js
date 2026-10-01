@@ -7,6 +7,7 @@ const Terms = () => import('../pages/terms.vue');
 const AppLayout = () => import('../layouts/AppLayout.vue');
 const Lobby = () => import('../pages/lobby/index.vue');
 const Wallet = () => import('../pages/wallet.vue');
+const Table = () => import('../pages/table.vue');
 
 const routes = [
   { path: '/login', component: Login, meta: { public: true, guestOnly: true } },
@@ -20,6 +21,8 @@ const routes = [
       { path: 'billetera', name: 'wallet', component: Wallet }
     ]
   },
+  // La mesa va a pantalla completa, fuera del layout con navegación
+  { path: '/mesa/:roomId', component: Table },
   { path: '/:pathMatch(.*)*', redirect: '/' }
 ];
 

@@ -22,9 +22,8 @@
         </div>
       </transition>
       <div class="tr-board__status" role="status" aria-live="polite">{{ statusText }}</div>
-      <div v-if="trucoLabel || envidoLabel" class="tr-board__chips">
-        <span v-if="trucoLabel" class="tr-chip">{{ trucoLabel }}</span>
-        <span v-if="envidoLabel" class="tr-chip">{{ envidoLabel }}</span>
+      <div v-if="trucoLabel" class="tr-board__chips">
+        <span class="tr-chip">{{ trucoLabel }}</span>
       </div>
     </section>
 
@@ -33,16 +32,10 @@
       <div class="tr-board__who tr-board__who--me">
         <strong>Vos</strong>
         <span v-if="hand?.manoId === view.me.id" class="tr-badge">Mano</span>
-        <span v-if="hand" class="tr-badge tr-badge--soft">Tenés {{ hand.myTantos }} de envido</span>
       </div>
       <PlayerHand :cards="hand?.myCards || []" :can-play="canPlay" @play="$emit('play', $event)" />
       <ActionBar :available="buttonActions" :disabled="sending" @action="$emit('action', $event)" />
     </section>
-
-    <!-- Log -->
-    <ul v-if="log.length" class="tr-board__log" aria-label="Últimas jugadas">
-      <li v-for="entry in log" :key="entry.id">{{ entry.text }}</li>
-    </ul>
   </div>
 </template>
 
@@ -57,7 +50,6 @@ import PlayingCard from './PlayingCard.vue';
 const props = defineProps({
   view: { type: Object, required: true },
   opponentName: { type: String, required: true },
-  log: { type: Array, default: () => [] },
   announcement: { type: Object, default: null },
   sending: Boolean
 });
@@ -71,12 +63,6 @@ const buttonActions = computed(() => props.view.availableActions.filter((t) => t
 const trucoLabel = computed(() => {
   const level = hand.value?.truco?.level;
   return level > 1 ? `Se juega por ${level}` : '';
-});
-
-const envidoLabel = computed(() => {
-  const result = hand.value?.envido?.result;
-  if (!result) return '';
-  return result.accepted ? `Envido: ${Object.values(result.tantos).join(' a ')}` : 'Envido no querido';
 });
 
 const statusText = computed(() => {
@@ -140,7 +126,6 @@ const statusText = computed(() => {
 }
 
 .tr-badge--turn { background: #fde047; color: #422006; }
-.tr-badge--soft { text-transform: none; letter-spacing: 0; font-weight: 600; }
 
 .tr-board__felt {
   position: relative;
@@ -201,19 +186,6 @@ const statusText = computed(() => {
 .tr-pop-leave-active { transition: opacity 0.3s ease; }
 .tr-pop-enter-from { opacity: 0; transform: translate(-50%, -50%) scale(0.7); }
 .tr-pop-leave-to { opacity: 0; }
-
-.tr-board__log {
-  margin: 0;
-  list-style: none;
-  padding: 10px 14px;
-  border-radius: 12px;
-  background: rgba(0, 0, 0, 0.2);
-  font-size: 0.8rem;
-  line-height: 1.5;
-  color: rgba(255, 255, 255, 0.85);
-}
-
-.tr-board__log li:first-child { color: #fff; font-weight: 600; }
 
 @media (prefers-reduced-motion: reduce) {
   .tr-pop-enter-active, .tr-pop-leave-active { transition: none; }

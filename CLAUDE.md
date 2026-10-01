@@ -37,7 +37,10 @@ npm run build    # dist/ (verificación de que todo compila; no hay tests ni lin
   `room:join` para que el servidor reenvíe `game:state` (así funciona la reconexión). Las acciones salen
   por `game.sendAction(type, payload)` con un `actionId` uuid.
 - La mesa (`components/game/`) es solo presentación de `game.view`; los botones son
-  `view.availableActions` y los textos del log salen de `utils/gameText.js`.
+  `view.availableActions`.
+- **Decisiones de producto en la mesa:** no mostrar ayudas de tantos (ni los propios ni un resumen
+  persistente del envido; solo el anuncio breve de lo que se cantó) y no mostrar el historial de jugadas.
+  `game.log` (textos de `utils/gameText.js`) se sigue armando por si después se muestra en otro lado.
 - **El front no implementa reglas de truco:** la mesa (M4) solo mostrará las acciones que el servidor manda
   en `availableActions`. Las reglas de `utils/validators.js` son solo feedback del formulario; el backend
   sigue siendo la autoridad.

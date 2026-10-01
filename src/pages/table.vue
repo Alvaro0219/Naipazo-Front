@@ -46,7 +46,6 @@
         v-else-if="game.view"
         :view="game.view"
         :opponent-name="opponentName"
-        :log="game.log"
         :announcement="game.announcement"
         :sending="game.sending"
         @play="(cardId) => game.sendAction('PLAY_CARD', { cardId })"

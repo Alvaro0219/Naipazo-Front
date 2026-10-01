@@ -1,5 +1,7 @@
 import { CALL_LABELS } from './cards.js';
 
+const scores = (name, points) => (name === 'Vos' ? `Sumás ${points}` : `${name} suma ${points}`);
+
 const HAND_REASONS = {
   bazas: '',
   truco_rejected: ' (no quiso)',
@@ -20,10 +22,13 @@ export function describeEvent(event, { nameOf, teamName }) {
       return `${nameOf(event.playerId)}: ¡${CALL_LABELS[event.call] || event.call}!`;
     case 'RESPONSE':
       return `${nameOf(event.playerId)}: ${event.response === 'QUIERO' ? 'Quiero' : 'No quiero'}`;
-    case 'ENVIDO_RESULT':
-      if (!event.accepted) return `${teamName(event.winnerTeam)} suma ${event.points} por el envido no querido.`;
-      return `Envido: ${Object.entries(event.tantos).map(([id, t]) => `${nameOf(id)} ${t}`).join(' – ')}. `
-        + `${teamName(event.winnerTeam)} suma ${event.points}.`;
+    case 'ENVIDO_RESULT': {
+      if (!event.accepted) return `${scores(teamName(event.winnerTeam), event.points)} por el envido no querido.`;
+      // Solo vienen los tantos cantados: si hay uno solo, el otro dijo "son buenas"
+      const sung = Object.entries(event.tantos).map(([id, t]) => `${nameOf(id)}: ${t}`);
+      const goodOnes = sung.length === 1 ? ' — son buenas' : '';
+      return `Envido. ${sung.join(', ')}${goodOnes}. ${scores(teamName(event.winnerTeam), event.points)}.`;
+    }
     case 'BAZA_WON':
       return event.winnerTeam === null ? 'Parda.' : `${nameOf(event.winnerPlayerId)} gana la baza.`;
     case 'WENT_TO_DECK':
@@ -44,6 +49,9 @@ export function announcementFor(event) {
   if (event.type === 'CALL') return `¡${CALL_LABELS[event.call] || event.call}!`;
   if (event.type === 'RESPONSE') return event.response === 'QUIERO' ? '¡Quiero!' : 'No quiero';
   if (event.type === 'WENT_TO_DECK') return 'Me voy al mazo';
-  if (event.type === 'ENVIDO_RESULT' && event.accepted) return Object.values(event.tantos).join(' a ');
+  if (event.type === 'ENVIDO_RESULT' && event.accepted) {
+    const values = Object.values(event.tantos); // en el orden en que se cantaron, empezando por el mano
+    return values.length === 1 ? `${values[0]} · Son buenas` : values.join(' · ');
+  }
   return null;
 }

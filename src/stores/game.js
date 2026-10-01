@@ -16,7 +16,7 @@ export const useGameStore = defineStore('game', {
     roomId: null,
     room: null,
     view: null,
-    log: [],
+    log: [], // historial de la mano: se arma pero hoy no se muestra en la mesa (decisión de producto)
     announcement: null,
     finished: null,
     opponentAway: false,

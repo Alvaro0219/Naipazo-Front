@@ -8,6 +8,11 @@ const AppLayout = () => import('../layouts/AppLayout.vue');
 const Lobby = () => import('../pages/lobby/index.vue');
 const Wallet = () => import('../pages/wallet.vue');
 const Table = () => import('../pages/table.vue');
+const History = () => import('../pages/history/index.vue');
+const MatchDetail = () => import('../pages/history/detail.vue');
+const Ranking = () => import('../pages/ranking.vue');
+const Profile = () => import('../pages/profile.vue');
+const Admin = () => import('../pages/admin/index.vue');
 
 const routes = [
   { path: '/login', component: Login, meta: { public: true, guestOnly: true } },
@@ -18,7 +23,12 @@ const routes = [
     component: AppLayout,
     children: [
       { path: '', name: 'lobby', component: Lobby },
-      { path: 'billetera', name: 'wallet', component: Wallet }
+      { path: 'billetera', name: 'wallet', component: Wallet },
+      { path: 'historial', name: 'history', component: History },
+      { path: 'historial/:id', name: 'match-detail', component: MatchDetail },
+      { path: 'ranking', name: 'ranking', component: Ranking },
+      { path: 'perfil', name: 'profile', component: Profile },
+      { path: 'admin', name: 'admin', component: Admin, meta: { role: 'admin' } }
     ]
   },
   // La mesa va a pantalla completa, fuera del layout con navegación

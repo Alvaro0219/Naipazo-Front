@@ -160,6 +160,51 @@ export async function cancelRoom(roomId) {
   return unwrap(data, 'No se pudo cancelar la sala', status).room;
 }
 
+// ─── Historial y ranking ────────────────────────────────
+
+/** { items, pagination } — partidas cerradas del usuario */
+export async function fetchMatches({ page = 1, limit = 20 } = {}) {
+  const { data, status } = await api.get('/matches', { params: { page, limit } });
+  return unwrap(data, 'No se pudo cargar el historial', status);
+}
+
+export async function fetchMatch(matchId) {
+  const { data, status } = await api.get(`/matches/${matchId}`);
+  return unwrap(data, 'No se pudo cargar la partida', status).match;
+}
+
+/** params: { by: 'won' | 'chips', period: 'all' | 'month' | 'week', page, limit } */
+export async function fetchRanking(params) {
+  const { data, status } = await api.get('/ranking', { params });
+  return unwrap(data, 'No se pudo cargar el ranking', status);
+}
+
+// ─── Perfil ─────────────────────────────────────────────
+
+/** Devuelve una sesión nueva (las demás sesiones quedan cerradas) */
+export async function changePassword(currentPassword, newPassword) {
+  const { data, status } = await api.patch('/users/me/password', { currentPassword, newPassword });
+  return unwrap(data, 'No se pudo cambiar la contraseña', status);
+}
+
+// ─── Admin ──────────────────────────────────────────────
+
+export async function fetchAdminUsers({ search = '', page = 1, limit = 20 } = {}) {
+  const { data, status } = await api.get('/admin/users', { params: { search, page, limit } });
+  return unwrap(data, 'No se pudieron cargar los usuarios', status);
+}
+
+export async function setUserStatus(userId, isActive) {
+  const { data, status } = await api.patch(`/admin/users/${userId}/status`, { isActive });
+  return unwrap(data, 'No se pudo cambiar el estado', status).user;
+}
+
+/** payload: { amount, reason, operationId } */
+export async function adjustUserChips(userId, payload) {
+  const { data, status } = await api.post(`/admin/users/${userId}/adjust`, payload);
+  return unwrap(data, 'No se pudo ajustar el saldo', status);
+}
+
 // ─── Tiempo real ────────────────────────────────────────
 
 export const WS_URL = import.meta.env.VITE_WS_URL || 'http://localhost:4000';

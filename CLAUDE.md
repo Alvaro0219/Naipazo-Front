@@ -29,6 +29,12 @@ npm run build    # dist/ (verificación de que todo compila; no hay tests ni lin
   diario, compartido entre la barra superior y la billetera). Toda respuesta de sesión pasa por
   `auth.applySession`, que alimenta a `wallet.ingest`, y este muestra el aviso "¡Recibiste tus N fichas de hoy!".
   El resto del estado vive en cada página.
+- **Listados paginados en el servidor** (billetera, historial, ranking, admin): `composables/usePaginatedList.js`
+  con `q-table` (`v-model:pagination` + `@request`). Es el equivalente de `useCrudResource` de la skill para
+  colecciones paginadas; no hay pantallas CRUD clásicas.
+- **Navegación:** `AppLayout` define `navItems` (Mesas, Historial, Ranking, Billetera, Perfil = las 5 tabs
+  inferiores en celular). Admin solo aparece en la barra lateral y desde Perfil. Cerrar sesión está en Perfil
+  (celular) y en la barra lateral (escritorio).
 - **Router:** `meta.public`, `meta.guestOnly` y `meta.role`; un único `beforeEach` decide los accesos.
   La mesa (`/mesa/:roomId`) va fuera de `AppLayout`, a pantalla completa.
 - **Tiempo real:** `composables/useSocket.js` mantiene **un solo** socket para toda la app (token en

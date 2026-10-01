@@ -78,24 +78,22 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue';
-import { useQuasar } from 'quasar';
+import { computed, onMounted } from 'vue';
 import ChipsNotice from '../components/ChipsNotice.vue';
 import LoadingState from '../components/LoadingState.vue';
 import { useCountdown } from '../composables/useCountdown.js';
+import { usePaginatedList } from '../composables/usePaginatedList.js';
 import { fetchLedger } from '../services/api.js';
 import { useWalletStore } from '../stores/wallet.js';
 import {
   LEDGER_TYPE_LABELS, formatChips, formatDateTime, formatDuration, formatSignedChips
 } from '../utils/format.js';
 
-const $q = useQuasar();
 const wallet = useWalletStore();
 
-const rows = ref([]);
-const loading = ref(false);
-const firstLoad = ref(true);
-const pagination = ref({ page: 1, rowsPerPage: 20, rowsNumber: 0 });
+const {
+  rows, loading, firstLoad, pagination, onRequest, reload: reloadLedger
+} = usePaginatedList({ fetchFn: fetchLedger, label: 'el historial' });
 
 const columns = [
   { name: 'createdAt', label: 'Fecha', field: 'createdAt', align: 'left', format: formatDateTime },
@@ -106,24 +104,6 @@ const columns = [
 
 function amountClass(value) {
   return value > 0 ? 'text-positive' : value < 0 ? 'text-negative' : '';
-}
-
-async function onRequest({ pagination: next }) {
-  loading.value = true;
-  try {
-    const { items, pagination: meta } = await fetchLedger({ page: next.page, limit: next.rowsPerPage });
-    rows.value = items;
-    pagination.value = { ...next, rowsNumber: meta.total };
-  } catch (e) {
-    $q.notify({ type: 'negative', message: e.message || 'No se pudo cargar el historial' });
-  } finally {
-    loading.value = false;
-    firstLoad.value = false;
-  }
-}
-
-function reloadLedger() {
-  return onRequest({ pagination: { ...pagination.value, page: 1 } });
 }
 
 // Al llegar a la medianoche se pide la billetera: el backend acredita el nuevo crédito

@@ -10,7 +10,7 @@
 
       <nav class="tr-nav">
         <router-link
-          v-for="item in navItems"
+          v-for="item in sidebarItems"
           :key="item.path"
           :to="item.path"
           class="tr-nav-link"
@@ -38,7 +38,6 @@
         </router-link>
         <div class="tr-mobile-header__right">
           <BalanceChip dark />
-          <q-btn flat round dense icon="logout" color="white" aria-label="Cerrar sesión" @click="handleLogout" />
         </div>
       </header>
 
@@ -63,7 +62,7 @@
 </template>
 
 <script setup>
-import { onMounted } from 'vue';
+import { computed, onMounted } from 'vue';
 import { useQuasar } from 'quasar';
 import { useRoute, useRouter } from 'vue-router';
 import BalanceChip from '../components/BalanceChip.vue';
@@ -78,8 +77,16 @@ const wallet = useWalletStore();
 
 const navItems = [
   { path: '/', label: 'Mesas', icon: 'style' },
-  { path: '/billetera', label: 'Billetera', icon: 'account_balance_wallet' }
+  { path: '/historial', label: 'Historial', icon: 'history' },
+  { path: '/ranking', label: 'Ranking', icon: 'emoji_events' },
+  { path: '/billetera', label: 'Billetera', icon: 'account_balance_wallet' },
+  { path: '/perfil', label: 'Perfil', icon: 'person' }
 ];
+
+// El panel de admin solo va en la barra lateral (en el celular se entra desde Perfil)
+const sidebarItems = computed(() => (auth.isAdmin
+  ? [...navItems, { path: '/admin', label: 'Admin', icon: 'admin_panel_settings' }]
+  : navItems));
 
 function isActive(path) {
   return path === '/' ? route.path === '/' : route.path.startsWith(path);
@@ -175,9 +182,10 @@ onMounted(async () => {
   padding: 8px 0 10px;
   min-height: 56px;
   color: #64748b;
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   font-weight: 600;
   text-decoration: none;
+  min-width: 0;
 }
 
 .tr-mobile-tab.active { color: #166534; }

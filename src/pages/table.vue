@@ -4,8 +4,18 @@
       <q-btn flat round dense icon="arrow_back" color="white" aria-label="Volver al lobby" @click="goLobby" />
       <div class="tr-table__title">
         <strong>Mesa {{ game.room?.code || '' }}</strong>
-        <span v-if="game.room">{{ game.room.config.targetPoints }} puntos · sin flor · gratis</span>
+        <span v-if="game.room">{{ game.room.config.targetPoints }} puntos · sin flor · {{ betLabel }}</span>
       </div>
+      <q-btn
+        v-if="game.view && !game.finished"
+        flat
+        round
+        dense
+        icon="flag"
+        color="white"
+        aria-label="Abandonar la partida"
+        @click="confirmAbandon"
+      />
       <ScoreBoard
         v-if="game.view"
         :score="game.view.score"
@@ -16,7 +26,12 @@
       />
     </header>
 
-    <ConnectionBanner :socket-status="status" :opponent-away="game.opponentAway" :opponent-name="opponentName" />
+    <ConnectionBanner
+      v-if="!game.finished"
+      :socket-status="status"
+      :opponent-grace-deadline="game.opponentGraceDeadline"
+      :opponent-name="opponentName"
+    />
 
     <main class="tr-table__main">
       <!-- Otra pestaña tomó la partida -->
@@ -45,6 +60,7 @@
       <TableBoard
         v-else-if="game.view"
         :view="game.view"
+        :turn-clock="game.finished ? null : game.turnClock"
         :opponent-name="opponentName"
         :announcement="game.announcement"
         :sending="game.sending"
@@ -63,9 +79,13 @@
         <q-card-section class="tr-result__body">
           <q-icon :name="iWon ? 'emoji_events' : 'sentiment_dissatisfied'" size="56px" :color="iWon ? 'accent' : 'grey-6'" />
           <h2>{{ iWon ? '¡Ganaste la partida!' : `Ganó ${opponentName}` }}</h2>
+          <p v-if="reasonText" class="tr-result__reason">{{ reasonText }}</p>
           <p v-if="game.finished" class="tr-num">
             Vos {{ myScore }} – {{ theirScore }} {{ opponentName }}
           </p>
+          <div v-if="myChips" class="tr-result__chips tr-num" :class="myChips.net >= 0 ? 'tr-result__chips--won' : 'tr-result__chips--lost'">
+            {{ myChips.net >= 0 ? `+${formatChips(myChips.net)}` : `−${formatChips(-myChips.net)}` }} fichas
+          </div>
         </q-card-section>
         <q-card-actions align="center">
           <q-btn color="primary" unelevated no-caps label="Volver al lobby" @click="goLobby" />
@@ -85,6 +105,7 @@ import TableBoard from '../components/game/TableBoard.vue';
 import { useSocket } from '../composables/useSocket.js';
 import { cancelRoom } from '../services/api.js';
 import { useGameStore } from '../stores/game.js';
+import { formatChips } from '../utils/format.js';
 
 const $q = useQuasar();
 const route = useRoute();
@@ -98,7 +119,18 @@ const opponentName = computed(() => {
   return game.room?.seats?.find((s) => s.userId !== game.myId)?.username || 'Rival';
 });
 
+const betLabel = computed(() => {
+  const bet = game.room?.config?.bet;
+  return bet ? `${formatChips(bet)} fichas` : 'gratis';
+});
+
 const iWon = computed(() => game.finished?.winnerTeam === game.myTeam);
+const myChips = computed(() => game.finished?.chips?.players?.find((p) => p.userId === game.myId) ?? null);
+const reasonText = computed(() => {
+  const f = game.finished;
+  if (f?.endReason !== 'abandon') return '';
+  return f.abandonedBy === game.myId ? 'Abandonaste la partida.' : `${opponentName.value} abandonó la partida.`;
+});
 const myScore = computed(() => game.finished?.score?.[game.myTeam] ?? 0);
 const theirScore = computed(() => game.finished?.score?.[1 - game.myTeam] ?? 0);
 
@@ -121,6 +153,18 @@ function handleAction(type) {
     cancel: { label: 'Seguir jugando', flat: true, noCaps: true },
     ok: { label: 'Me voy al mazo', color: 'negative', unelevated: true, noCaps: true }
   }).onOk(() => game.sendAction('GO_TO_DECK'));
+}
+
+function confirmAbandon() {
+  const bet = game.room?.config?.bet;
+  $q.dialog({
+    title: '¿Abandonar la partida?',
+    message: bet
+      ? `Abandonar cuenta como derrota: ${opponentName.value} gana y perdés tus ${formatChips(bet)} fichas.`
+      : `Abandonar cuenta como derrota: ${opponentName.value} gana la partida.`,
+    cancel: { label: 'Seguir jugando', flat: true, noCaps: true },
+    ok: { label: 'Abandonar', color: 'negative', unelevated: true, noCaps: true }
+  }).onOk(() => game.abandon());
 }
 
 async function handleCancel() {
@@ -231,4 +275,20 @@ watch(() => route.params.roomId, (id) => id && game.enterRoom(id));
   color: #475569;
   font-size: 1.05rem;
 }
+
+.tr-result__body .tr-result__reason {
+  font-size: 0.9rem;
+  color: #64748b;
+}
+
+.tr-result__chips {
+  margin-top: 6px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-weight: 800;
+  font-size: 1.1rem;
+}
+
+.tr-result__chips--won { background: #dcfce7; color: #166534; }
+.tr-result__chips--lost { background: #fee2e2; color: #991b1b; }
 </style>

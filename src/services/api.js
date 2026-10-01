@@ -122,6 +122,14 @@ export async function fetchLedger({ page = 1, limit = 20 } = {}) {
   return unwrap(data, 'No se pudo cargar el historial', status);
 }
 
+// ─── Configuración pública del juego ────────────────────
+
+/** { minBet, maxBet, houseRate, dailyGrantAmount, turnTimeoutSeconds, reconnectGraceSeconds } */
+export async function fetchGameConfig() {
+  const { data, status } = await api.get('/config');
+  return unwrap(data, 'No se pudo cargar la configuración', status);
+}
+
 // ─── Salas ──────────────────────────────────────────────
 
 /** { items, pagination } — salas en espera */

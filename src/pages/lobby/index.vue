@@ -44,7 +44,9 @@
           <div class="tr-room__main">
             <strong>{{ room.seats[0]?.username }} <span class="tr-room__code">{{ room.code }}</span></strong>
             <span class="tr-room__meta">
-              A {{ room.config.targetPoints }} · sin flor · {{ room.config.bet ? `${formatChips(room.config.bet)} fichas` : 'gratis' }}
+              A {{ room.config.targetPoints }} · sin flor
+              <span v-if="room.config.bet" class="tr-room__bet">{{ formatChips(room.config.bet) }} fichas</span>
+              <template v-else>· gratis</template>
             </span>
           </div>
           <q-btn
@@ -60,8 +62,8 @@
             color="primary"
             unelevated
             no-caps
-            label="Unirme"
-            :disable="Boolean(myRoom)"
+            :label="canAfford(room) ? 'Unirme' : 'Sin fichas'"
+            :disable="Boolean(myRoom) || !canAfford(room)"
             :loading="joiningId === room.id"
             @click="handleJoin(room)"
           />
@@ -82,11 +84,13 @@ import LoadingState from '../../components/LoadingState.vue';
 import { useSocket } from '../../composables/useSocket.js';
 import { fetchMyRoom, joinRoom } from '../../services/api.js';
 import { useAuthStore } from '../../stores/auth.js';
+import { useWalletStore } from '../../stores/wallet.js';
 import { formatChips } from '../../utils/format.js';
 
 const $q = useQuasar();
 const router = useRouter();
 const auth = useAuthStore();
+const wallet = useWalletStore();
 const { socket, status, connect } = useSocket();
 
 const rooms = ref(null);
@@ -114,7 +118,25 @@ async function loadMyRoom() {
   }
 }
 
-async function handleJoin(room) {
+function canAfford(room) {
+  return !room.config.bet || (wallet.balance ?? 0) >= room.config.bet;
+}
+
+function handleJoin(room) {
+  if (!room.config.bet) {
+    doJoin(room);
+    return;
+  }
+  $q.dialog({
+    title: `Mesa por ${formatChips(room.config.bet)} fichas`,
+    message: `Al empezar se descuentan ${formatChips(room.config.bet)} fichas de tu saldo. `
+      + 'Si ganás te llevás el pozo; si perdés o abandonás, las perdés.',
+    cancel: { label: 'Cancelar', flat: true, noCaps: true },
+    ok: { label: 'Jugar', color: 'primary', unelevated: true, noCaps: true }
+  }).onOk(() => doJoin(room));
+}
+
+async function doJoin(room) {
   joiningId.value = room.id;
   try {
     const joined = await joinRoom(room.id);
@@ -224,5 +246,15 @@ onBeforeUnmount(() => {
 .tr-room__meta {
   color: #64748b;
   font-size: 0.85rem;
+}
+
+.tr-room__bet {
+  margin-left: 4px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: #fefce8;
+  border: 1px solid #fde68a;
+  color: #713f12;
+  font-weight: 700;
 }
 </style>

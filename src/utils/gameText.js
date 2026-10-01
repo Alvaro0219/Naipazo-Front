@@ -35,10 +35,14 @@ export function describeEvent(event, { nameOf, teamName }) {
       return `${nameOf(event.playerId)} se fue al mazo.`;
     case 'TURN_TIMEOUT':
       return `A ${nameOf(event.playerId)} se le pasó el tiempo.`;
-    case 'HAND_WON':
-      return `${teamName(event.winnerTeam)} gana la mano: +${event.points}${HAND_REASONS[event.reason] || ''}.`;
-    case 'MATCH_FINISHED':
-      return `${teamName(event.winnerTeam)} gana la partida.`;
+    case 'HAND_WON': {
+      const who = teamName(event.winnerTeam);
+      return `${who === 'Vos' ? 'Ganás' : `${who} gana`} la mano: +${event.points}${HAND_REASONS[event.reason] || ''}.`;
+    }
+    case 'MATCH_FINISHED': {
+      const who = teamName(event.winnerTeam);
+      return who === 'Vos' ? 'Ganaste la partida.' : `${who} gana la partida.`;
+    }
     default:
       return null;
   }

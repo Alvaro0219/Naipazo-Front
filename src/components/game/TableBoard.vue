@@ -22,6 +22,7 @@
         </div>
       </transition>
       <div class="tr-board__status" role="status" aria-live="polite">{{ statusText }}</div>
+      <TurnTimer :clock="turnClock" />
       <div v-if="trucoLabel" class="tr-board__chips">
         <span class="tr-chip">{{ trucoLabel }}</span>
       </div>
@@ -46,9 +47,11 @@ import ActionBar from './ActionBar.vue';
 import PlayedCards from './PlayedCards.vue';
 import PlayerHand from './PlayerHand.vue';
 import PlayingCard from './PlayingCard.vue';
+import TurnTimer from './TurnTimer.vue';
 
 const props = defineProps({
   view: { type: Object, required: true },
+  turnClock: { type: Object, default: null },
   opponentName: { type: String, required: true },
   announcement: { type: Object, default: null },
   sending: Boolean

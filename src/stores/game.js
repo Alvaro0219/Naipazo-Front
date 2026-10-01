@@ -19,9 +19,9 @@ export const useGameStore = defineStore('game', {
     log: [], // historial de la mano: se arma pero hoy no se muestra en la mesa (decisión de producto)
     announcement: null,
     finished: null,
-    opponentAway: false,
     replaced: false,
-    sending: false
+    sending: false,
+    receivedAt: 0 // cuándo llegó el último game:state (los plazos vienen como "ms restantes")
   }),
   getters: {
     myId: (s) => s.view?.me?.id ?? null,
@@ -31,7 +31,22 @@ export const useGameStore = defineStore('game', {
       if (playerId === s.view?.me?.id) return 'Vos';
       return s.view?.usernames?.[playerId] || s.room?.seats?.find((x) => x.userId === playerId)?.username || 'Rival';
     },
-    canAct: (s) => (type) => Boolean(s.view?.availableActions?.includes(type))
+    canAct: (s) => (type) => Boolean(s.view?.availableActions?.includes(type)),
+    /** Plazo del turno actual: { deadline, totalMs, mine } o null si no corre (pausa, entre manos). */
+    turnClock: (s) => {
+      const turn = s.view?.turn;
+      if (!turn) return null;
+      return {
+        deadline: s.receivedAt + turn.remainingMs,
+        totalMs: turn.totalMs,
+        mine: turn.playerIds.includes(s.view.me.id)
+      };
+    },
+    /** Si el rival está desconectado: hasta cuándo tiene para volver (o null). */
+    opponentGraceDeadline: (s) => {
+      const away = Object.entries(s.view?.disconnected || {}).find(([id]) => id !== s.view.me.id);
+      return away ? s.receivedAt + away[1].remainingMs : null;
+    }
   },
   actions: {
     enterRoom(roomId) {
@@ -58,8 +73,7 @@ export const useGameStore = defineStore('game', {
       socket.on('game:event', (event) => this.onEvent(event));
       socket.on('game:finished', (summary) => { if (summary.matchId === this.room?.matchId) this.finished = summary; });
       socket.on('game:error', (err) => this.onError(err));
-      socket.on('player:disconnected', ({ playerId }) => { if (playerId !== this.myId) this.opponentAway = true; });
-      socket.on('player:reconnected', ({ playerId }) => { if (playerId !== this.myId) this.opponentAway = false; });
+      // Desconexiones del rival: el servidor reenvía game:state con `disconnected`, que es lo que se muestra
     },
     onRoomUpdate(room) {
       if (room.id !== this.roomId) return;
@@ -71,6 +85,7 @@ export const useGameStore = defineStore('game', {
     onState(view) {
       if (this.room && view.roomId !== this.roomId) return;
       this.view = view;
+      this.receivedAt = Date.now();
       this.sending = false;
     },
     onEvent(event) {
@@ -107,6 +122,10 @@ export const useGameStore = defineStore('game', {
         type,
         payload
       });
+    },
+    abandon() {
+      if (!this.view) return;
+      useSocket().socket.emit('game:abandon', { matchId: this.view.matchId });
     }
   }
 });

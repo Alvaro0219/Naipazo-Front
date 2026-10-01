@@ -1,0 +1,25 @@
+{
+  "name": "truco-front",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview --port 5173"
+  },
+  "dependencies": {
+    "@quasar/extras": "^1.16.14",
+    "axios": "^1.6.8",
+    "pinia": "^2.1.7",
+    "quasar": "^2.16.4",
+    "vue": "^3.4.21",
+    "vue-router": "^4.3.2"
+  },
+  "devDependencies": {
+    "@quasar/vite-plugin": "^1.6.0",
+    "@vitejs/plugin-vue": "^5.0.4",
+    "sass-embedded": "^1.80.2",
+    "vite": "^5.2.0"
+  }
+}

@@ -17,6 +17,7 @@ export function socketDebug(entry) {
   if (!import.meta.env.DEV) return;
   const d = (window.__socketDebug ??= { created: 0, joins: [] });
   if (entry === 'created') d.created += 1;
+  else if (entry?.socket) d.socket = entry.socket; // las pruebas end-to-end simulan cortes de red con él
   else d.joins.push({ ...entry, socketId: socket?.id, at: Date.now() });
 }
 
@@ -60,6 +61,7 @@ function createSocket() {
     Notify.create({ type: 'info', icon: 'emoji_events', message: `¡Arranca tu ${(roundName || 'partida').toLowerCase()} del torneo!` });
     router.push(`/mesa/${roomId}`);
   });
+  socketDebug({ socket: s });
   return s;
 }
 

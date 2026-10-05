@@ -36,8 +36,10 @@ const visible = computed(() => auth.user && auth.user.emailVerified === false);
 async function resend() {
   loading.value = true;
   try {
-    await resendVerificationApi();
-    sent.value = true;
+    const result = await resendVerificationApi();
+    // Ya estaba verificado (por ejemplo, desde el celular): se actualiza y el aviso desaparece
+    if (result?.alreadyVerified) await auth.refreshUser();
+    else sent.value = true;
   } catch (e) {
     $q.notify({ type: 'negative', message: e.message || 'No se pudo reenviar el email' });
   } finally {

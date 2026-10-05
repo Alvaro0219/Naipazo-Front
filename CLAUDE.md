@@ -11,8 +11,17 @@ La especificación completa está en `../PROYECTO_TRUCO_ONLINE.md`; la arquitect
 
 ```bash
 npm run dev      # :5173
-npm run build    # dist/ (verificación de que todo compila; no hay tests ni linter)
+npm run build    # dist/ (verificación de que todo compila; no hay linter)
+npm test         # unitarios con Vitest + happy-dom (src/**/__tests__: stores auth y wallet)
+npm run test:e2e # end-to-end con Playwright (e2e/), ~3 min
 ```
+
+**End-to-end (`playwright.config.js`):** levantan su propio backend en :4100 (base `truco_e2e`, derivada de
+`MONGO_URL` de `../truco-back/.env`, o `E2E_MONGO_URL`) y su propio front en :5175, así no tocan los servidores
+ni la base de desarrollo. Usan el Chrome instalado (`channel: chrome`) y **un contexto de navegador por jugador**
+(localStorage aislado). Los emails salen por `EMAIL_OUTBOX_FILE` (`test-results/e2e-emails.jsonl`) y el backend
+corre con `RATE_LIMITS_RELAXED`. Para manejar las partidas leen el store `game` y hacen clics (`e2e/helpers.js`);
+el corte de red se simula con `setOffline` + `window.__socketDebug.socket` (solo existe en desarrollo).
 
 `.env`: `VITE_API_URL` (base `/api`) y `VITE_WS_URL` (Socket.IO, desde M4). Se inyectan en build time.
 

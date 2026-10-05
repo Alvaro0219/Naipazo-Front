@@ -34,7 +34,7 @@
 import { onMounted, ref } from 'vue';
 import { useRoute } from 'vue-router';
 import LoadingState from '../components/LoadingState.vue';
-import { fetchMe, verifyEmailApi } from '../services/api.js';
+import { verifyEmailApi } from '../services/api.js';
 import { useAuthStore } from '../stores/auth.js';
 import { useWalletStore } from '../stores/wallet.js';
 
@@ -52,13 +52,12 @@ onMounted(async () => {
   }
   try {
     await verifyEmailApi(token);
-    state.value = 'ok';
     // Si hay sesión en este navegador, se actualiza el usuario y se cobra el crédito del día
     if (auth.isAuthenticated) {
-      auth.user = await fetchMe();
-      auth.saveSession();
+      await auth.refreshUser().catch(() => {});
       useWalletStore().refresh();
     }
+    state.value = 'ok';
   } catch (e) {
     state.value = 'error';
     errorMessage.value = e.message || 'No se pudo verificar el email';

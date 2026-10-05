@@ -5,7 +5,8 @@ import { ApiError } from '../utils/ApiError.js';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
 
-const api = axios.create({ baseURL: API_BASE_URL, timeout: 15000 });
+// Exportada solo para los tests unitarios (se les cambia el adapter); el resto de la app usa las funciones de abajo
+export const api = axios.create({ baseURL: API_BASE_URL, timeout: 15000 });
 
 // ─── Interceptors ───────────────────────────────────────
 

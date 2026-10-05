@@ -3,7 +3,7 @@
     <aside class="tr-sidebar">
       <router-link to="/" class="tr-brand">
         <img src="/favicon.svg" alt="" />
-        <span>Truco Online</span>
+        <span>Naipazo</span>
       </router-link>
 
       <BalanceChip dark class="tr-sidebar__balance" />
@@ -34,7 +34,7 @@
       <header class="tr-mobile-header">
         <router-link to="/" class="tr-brand tr-brand--mobile">
           <img src="/favicon.svg" alt="" />
-          <span>Truco</span>
+          <span>Naipazo</span>
         </router-link>
         <div class="tr-mobile-header__right">
           <BalanceChip dark />
@@ -108,7 +108,15 @@ watch(() => wallet.balance, (value, previous) => {
   if (previous !== null && previous !== undefined) console.warn('[wallet] el saldo quedó vacío', { previous, lastSource: wallet.lastSource });
   wallet.refresh();
 });
-function onVisible() { if (document.visibilityState === 'visible') wallet.refresh(); }
+// El email se verifica en otra pestaña o dispositivo: al volver se relee el usuario si seguía sin verificar
+function refreshUnverifiedUser() {
+  if (auth.user?.emailVerified === false) auth.refreshUser().catch(() => {});
+}
+function onVisible() {
+  if (document.visibilityState !== 'visible') return;
+  wallet.refresh();
+  refreshUnverifiedUser();
+}
 document.addEventListener('visibilitychange', onVisible);
 onBeforeUnmount(() => document.removeEventListener('visibilitychange', onVisible));
 
@@ -121,6 +129,7 @@ onMounted(async () => {
   } catch (e) {
     if (e.status !== 401) $q.notify({ type: 'negative', message: e.message });
   }
+  refreshUnverifiedUser();
 });
 </script>
 

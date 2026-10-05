@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { loginApi, logoutApi, refreshApi, registerApi } from '../services/api.js';
+import { fetchMe, loginApi, logoutApi, refreshApi, registerApi } from '../services/api.js';
 import { disconnectSocket } from '../composables/useSocket.js';
 import { useWalletStore } from './wallet.js';
 
@@ -52,6 +52,12 @@ export const useAuthStore = defineStore('auth', {
     async refreshSession() {
       if (!this.refreshToken) throw new Error('Missing refresh token');
       this.applySession(await refreshApi(this.refreshToken));
+    },
+    /** Relee el usuario (por ejemplo, verificó el email desde otro dispositivo). */
+    async refreshUser() {
+      if (!this.accessToken) return;
+      this.user = await fetchMe();
+      this.saveSession();
     },
     clearSession() {
       this.accessToken = null;

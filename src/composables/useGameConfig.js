@@ -2,7 +2,7 @@ import { ref } from 'vue';
 import { fetchGameConfig } from '../services/api.js';
 
 // Parámetros del juego que define el backend (apuesta mínima/máxima, tiempos). Se piden una vez.
-const DEFAULTS = { minBet: 10, maxBet: 10000, houseRate: 0, turnTimeoutSeconds: 20, reconnectGraceSeconds: 60 };
+const DEFAULTS = { minBet: 10, maxBet: 10000, houseRate: 0, turnTimeoutSeconds: 20, reconnectGraceSeconds: 60, requireEmailVerification: false, privateMaxBet: 1000 };
 const config = ref({ ...DEFAULTS });
 let loading = null;
 

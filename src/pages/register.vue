@@ -77,8 +77,9 @@
 
         <ChipsNotice class="q-my-sm" />
 
-        <q-checkbox v-model="form.acceptTerms" dense class="tr-check" aria-label="Acepto los términos y condiciones">
+        <q-checkbox v-model="form.acceptTerms" dense class="tr-check" aria-label="Acepto los términos y condiciones y la política de privacidad">
           Acepto los <router-link to="/terminos" target="_blank">términos y condiciones</router-link>
+          y la <router-link to="/privacidad" target="_blank">política de privacidad</router-link>
         </q-checkbox>
         <q-checkbox v-model="form.confirmAdult" dense class="tr-check" label="Declaro que soy mayor de 18 años" />
         <div v-if="checkboxError" class="tr-check-error" role="alert">{{ checkboxError }}</div>

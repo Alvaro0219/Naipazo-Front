@@ -42,7 +42,7 @@ api.interceptors.response.use(
     const auth = useAuthStore();
     const originalRequest = error?.config;
     const status = error?.response?.status;
-    const isAuthRoute = ['/auth/login', '/auth/register', '/auth/refresh', '/auth/logout']
+    const isAuthRoute = ['/auth/login', '/auth/register', '/auth/refresh', '/auth/logout', '/auth/verify-email', '/auth/forgot-password', '/auth/reset-password']
       .some((path) => originalRequest?.url?.includes(path));
 
     if (status !== 401 || !originalRequest || originalRequest._retry || isAuthRoute) throw toApiError(error);
@@ -100,6 +100,27 @@ export async function logoutApi(refreshToken) {
 export async function fetchMe() {
   const { data, status } = await api.get('/auth/me');
   return unwrap(data, 'No se pudo obtener el usuario', status).user;
+}
+
+// Verificación de email y recuperación de contraseña (P4)
+export async function verifyEmailApi(token) {
+  const { data, status } = await api.post('/auth/verify-email', { token });
+  return unwrap(data, 'No se pudo verificar el email', status);
+}
+
+export async function resendVerificationApi() {
+  const { data, status } = await api.post('/auth/resend-verification');
+  return unwrap(data, 'No se pudo reenviar el email', status);
+}
+
+export async function forgotPasswordApi(email) {
+  const { data, status } = await api.post('/auth/forgot-password', { email });
+  return unwrap(data, 'No se pudo enviar el email', status);
+}
+
+export async function resetPasswordApi(token, password) {
+  const { data, status } = await api.post('/auth/reset-password', { token, password });
+  return unwrap(data, 'No se pudo cambiar la contraseña', status);
 }
 
 /** { username?: { available, reason? }, email?: { available, reason? } } */
@@ -251,6 +272,12 @@ export async function setUserStatus(userId, isActive) {
 }
 
 /** payload: { amount, reason, operationId } */
+/** P5: pares de cuentas con partidas privadas donde las fichas van siempre al mismo */
+export async function fetchChipFlows(params) {
+  const { data, status } = await api.get('/admin/chip-flows', { params });
+  return unwrap(data, 'No se pudo cargar el reporte', status).items;
+}
+
 export async function adjustUserChips(userId, payload) {
   const { data, status } = await api.post(`/admin/users/${userId}/adjust`, payload);
   return unwrap(data, 'No se pudo ajustar el saldo', status);

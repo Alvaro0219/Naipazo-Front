@@ -1,5 +1,7 @@
 <template>
   <div class="tr-page-shell">
+    <EmailVerifyBanner />
+
     <header class="tr-lobby-header">
       <div class="tr-page-header">
         <h1>Partidas</h1>
@@ -161,6 +163,7 @@ import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { useQuasar } from 'quasar';
 import { useRouter } from 'vue-router';
 import CreateGameDialog from '../../components/CreateGameDialog.vue';
+import EmailVerifyBanner from '../../components/EmailVerifyBanner.vue';
 import LoadingState from '../../components/LoadingState.vue';
 import PrivateRoomDialog from '../../components/PrivateRoomDialog.vue';
 import { useSocket } from '../../composables/useSocket.js';

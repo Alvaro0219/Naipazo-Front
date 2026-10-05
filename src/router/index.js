@@ -4,6 +4,10 @@ import { useAuthStore } from '../stores/auth.js';
 const Login = () => import('../pages/login.vue');
 const Register = () => import('../pages/register.vue');
 const Terms = () => import('../pages/terms.vue');
+const Privacy = () => import('../pages/privacy.vue');
+const ForgotPassword = () => import('../pages/forgot-password.vue');
+const ResetPassword = () => import('../pages/reset-password.vue');
+const VerifyEmail = () => import('../pages/verify-email.vue');
 const AppLayout = () => import('../layouts/AppLayout.vue');
 const Lobby = () => import('../pages/lobby/index.vue');
 const Wallet = () => import('../pages/wallet.vue');
@@ -19,6 +23,11 @@ const routes = [
   { path: '/login', component: Login, meta: { public: true, guestOnly: true } },
   { path: '/registro', component: Register, meta: { public: true, guestOnly: true } },
   { path: '/terminos', component: Terms, meta: { public: true } },
+  { path: '/privacidad', component: Privacy, meta: { public: true } },
+  { path: '/recuperar', component: ForgotPassword, meta: { public: true, guestOnly: true } },
+  // Se abren desde el email: funcionan con o sin sesión iniciada
+  { path: '/restablecer', component: ResetPassword, meta: { public: true } },
+  { path: '/verificar-email', component: VerifyEmail, meta: { public: true } },
   {
     path: '/',
     component: AppLayout,

@@ -55,6 +55,10 @@
         />
       </q-form>
 
+      <div class="tr-auth-forgot">
+        <router-link to="/recuperar">¿Olvidaste tu contraseña?</router-link>
+      </div>
+
       <div class="tr-auth-footer">
         ¿No tenés cuenta? <router-link to="/registro">Creá una gratis</router-link>
       </div>
@@ -102,3 +106,11 @@ async function handleSubmit() {
   }
 }
 </script>
+
+<style scoped>
+.tr-auth-forgot {
+  margin-top: 12px;
+  text-align: center;
+  font-size: 0.9rem;
+}
+</style>

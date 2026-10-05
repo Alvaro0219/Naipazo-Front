@@ -37,7 +37,9 @@
 
         <q-banner v-else-if="tournament.status === 'cancelled'" rounded class="tr-t-cancelled">
           <template #avatar><q-icon name="block" /></template>
-          El torneo se canceló. Si pagaste la inscripción, ya volvió a tu saldo.
+          <template v-if="tournament.cancelReason === 'expired'">El torneo venció porque no se completaron los cupos a tiempo.</template>
+          <template v-else>El torneo se canceló.</template>
+          Si pagaste la inscripción, ya volvió a tu saldo.
         </q-banner>
 
         <!-- Mi situación en un torneo en juego -->

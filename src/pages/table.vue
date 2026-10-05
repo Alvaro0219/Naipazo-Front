@@ -64,7 +64,8 @@
 
       <div v-else-if="game.room?.status === 'cancelled'" class="tr-table__center">
         <q-icon name="block" size="48px" />
-        <h2>La mesa se canceló</h2>
+        <h2>{{ game.room.cancelReason === 'expired' ? 'La mesa venció' : 'La mesa se canceló' }}</h2>
+        <p v-if="game.room.cancelReason === 'expired'">Pasó mucho tiempo sin que se sumara un rival. Podés crear otra cuando quieras.</p>
         <q-btn color="accent" text-color="dark" unelevated no-caps label="Volver al lobby" @click="goLobby" />
       </div>
 

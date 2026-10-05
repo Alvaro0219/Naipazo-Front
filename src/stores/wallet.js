@@ -28,6 +28,15 @@ export const useWalletStore = defineStore('wallet', {
         }
       }
     },
+    /** Relee el saldo sin molestar: si falla, queda el último valor conocido. */
+    async refresh() {
+      if (this.loading) return;
+      try {
+        await this.fetch();
+      } catch {
+        /* sin red o sesión vencida: el interceptor de api.js ya se ocupa */
+      }
+    },
     async fetch() {
       this.loading = true;
       try {

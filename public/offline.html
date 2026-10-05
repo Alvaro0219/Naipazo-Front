@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="es-AR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#14532d" />
+    <title>Sin conexión · Truco Online</title>
+    <style>
+      html, body { height: 100%; margin: 0; }
+      body {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 14px;
+        padding: 24px;
+        background: #14532d;
+        color: #fff;
+        font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+        text-align: center;
+      }
+      img { width: 72px; height: 72px; }
+      h1 { margin: 0; font-size: 1.4rem; }
+      p { margin: 0; max-width: 32ch; color: rgba(255, 255, 255, 0.8); line-height: 1.45; }
+      button {
+        margin-top: 8px;
+        padding: 12px 22px;
+        border: 0;
+        border-radius: 10px;
+        background: #ca8a04;
+        color: #1c1917;
+        font: inherit;
+        font-weight: 700;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <img src="/favicon.svg" alt="" />
+    <h1>Sin conexión</h1>
+    <p>Para jugar al truco necesitás internet. Revisá tu conexión y volvé a intentar.</p>
+    <button type="button" onclick="location.reload()">Reintentar</button>
+  </body>
+</html>

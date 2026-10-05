@@ -13,6 +13,7 @@ const MatchDetail = () => import('../pages/history/detail.vue');
 const Ranking = () => import('../pages/ranking.vue');
 const Profile = () => import('../pages/profile.vue');
 const Admin = () => import('../pages/admin/index.vue');
+const TournamentDetail = () => import('../pages/tournaments/detail.vue');
 
 const routes = [
   { path: '/login', component: Login, meta: { public: true, guestOnly: true } },
@@ -26,6 +27,9 @@ const routes = [
       { path: 'billetera', name: 'wallet', component: Wallet },
       { path: 'historial', name: 'history', component: History },
       { path: 'historial/:id', name: 'match-detail', component: MatchDetail },
+      // Mesas y torneos se listan juntos en el lobby; /torneos queda como atajo
+      { path: 'torneos', redirect: '/' },
+      { path: 'torneos/:id', name: 'tournament-detail', component: TournamentDetail },
       { path: 'ranking', name: 'ranking', component: Ranking },
       { path: 'perfil', name: 'profile', component: Profile },
       { path: 'admin', name: 'admin', component: Admin, meta: { role: 'admin' } }

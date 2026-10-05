@@ -1,4 +1,5 @@
 import { ref } from 'vue';
+import { Notify } from 'quasar';
 import { io } from 'socket.io-client';
 import router from '../router/index.js';
 import { WS_URL } from '../services/api.js';
@@ -19,7 +20,8 @@ function createSocket() {
     auth: (cb) => cb({ token: useAuthStore().accessToken })
   });
 
-  s.on('connect', () => { status.value = 'connected'; });
+  // Al (re)conectar se relee el saldo: pudo cambiar mientras no había conexión
+  s.on('connect', () => { status.value = 'connected'; useWalletStore().refresh(); });
   s.on('disconnect', (reason) => {
     status.value = 'disconnected';
     // Si el servidor cortó la conexión a propósito, socket.io no reintenta solo
@@ -42,6 +44,13 @@ function createSocket() {
   });
 
   s.on('wallet:update', (data) => useWalletStore().ingest(data));
+
+  // Arrancó una partida de un torneo en el que estoy: se va directo a la mesa
+  s.on('tournament:match', ({ roomId, roundName }) => {
+    if (router.currentRoute.value.path === `/mesa/${roomId}`) return;
+    Notify.create({ type: 'info', icon: 'emoji_events', message: `¡Arranca tu ${(roundName || 'partida').toLowerCase()} del torneo!` });
+    router.push(`/mesa/${roomId}`);
+  });
   return s;
 }
 

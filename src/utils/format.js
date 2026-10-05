@@ -30,5 +30,8 @@ export const LEDGER_TYPE_LABELS = {
   BET_LOCK: 'Apuesta en mesa',
   BET_PAYOUT: 'Premio de partida',
   BET_REFUND: 'Devolución de apuesta',
-  ADMIN_ADJUST: 'Ajuste administrativo'
+  ADMIN_ADJUST: 'Ajuste administrativo',
+  TOURNAMENT_ENTRY: 'Inscripción a torneo',
+  TOURNAMENT_PRIZE: 'Premio de torneo',
+  TOURNAMENT_REFUND: 'Devolución de inscripción'
 };

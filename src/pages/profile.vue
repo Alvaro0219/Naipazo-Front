@@ -96,7 +96,9 @@ const stats = computed(() => {
     { label: 'Perdidas', value: s.lost ?? 0 },
     { label: '% de victorias', value: `${rate}%` },
     { label: 'Abandonos', value: s.abandoned ?? 0 },
-    { label: 'Fichas ganadas', value: formatChips(s.chipsWon ?? 0) }
+    { label: 'Fichas ganadas', value: formatChips(s.chipsWon ?? 0) },
+    { label: 'Torneos jugados', value: s.tournamentsPlayed ?? 0 },
+    { label: 'Torneos ganados', value: s.tournamentsWon ?? 0 }
   ];
 });
 

@@ -56,4 +56,17 @@ npm run build    # dist/ (verificación de que todo compila; no hay tests ni lin
   mobile-first: `AppLayout` muestra tabs inferiores bajo 1024px y sidebar desde 1024px.
 - Textos de UI en español rioplatense con voseo. El aviso "las fichas son virtuales, no tienen valor
   monetario y no son canjeables" (`components/ChipsNotice.vue`) es obligatorio en el registro y la billetera.
+- **Revancha (M7):** `stores/game.js` guarda `rematch` (eventos `game:rematch`); el panel de fin de partida de
+  `pages/table.vue` la pide/acepta/rechaza y, al arrancar, navega a la mesa nueva. Las partidas de torneo no tienen
+  revancha: muestran "Ver el torneo".
+- **Partidas (lobby):** `pages/lobby/index.vue` lista **mesas y torneos juntos** (`lobby:rooms` + `lobby:tournaments`),
+  diferenciados por color y etiqueta, con filtro por tipo (Todas / Mesas / Torneos). Un único botón "Crear partida" abre
+  `CreateGameDialog`, donde se elige Mesa o Torneo con sus opciones. `/torneos` redirige al lobby.
+- **Salas privadas:** el botón "Sala privada" del lobby abre `components/PrivateRoomDialog.vue` (Crear con monto escrito / Unirme con código: primero `fetchRoomByCode` para confirmar, después `joinRoomByCode`). No llegan por `lobby:rooms`; la sala de espera de `pages/table.vue` muestra el código y "Copiar código".
+- **Torneos (M7):** `pages/tournaments/detail.vue` (cuadro en vivo con `tournament:subscribe` / `tournament:update`).
+  `useSocket` escucha `tournament:match` en toda la app y lleva al jugador a su mesa; por eso `AppLayout` conecta el
+  socket al montar.
+- **App instalable (M7):** `public/manifest.webmanifest`, íconos generados con `node scripts/build-icons.mjs`
+  (mismo dibujo que `favicon.svg`), `public/sw.js` mínimo (solo pantalla `offline.html`; no cachea API ni
+  sockets) registrado en `main.js` únicamente en producción.
 - Despliegue en Cloudflare Pages; `public/_redirects` resuelve el ruteo SPA.

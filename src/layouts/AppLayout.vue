@@ -47,7 +47,7 @@
 
       <nav v-if="$q.screen.lt.md" class="tr-mobile-tabs">
         <router-link
-          v-for="item in navItems"
+          v-for="item in mobileItems"
           :key="item.path"
           :to="item.path"
           class="tr-mobile-tab"
@@ -62,10 +62,11 @@
 </template>
 
 <script setup>
-import { computed, onMounted } from 'vue';
+import { computed, onBeforeUnmount, onMounted, watch } from 'vue';
 import { useQuasar } from 'quasar';
 import { useRoute, useRouter } from 'vue-router';
 import BalanceChip from '../components/BalanceChip.vue';
+import { useSocket } from '../composables/useSocket.js';
 import { useAuthStore } from '../stores/auth.js';
 import { useWalletStore } from '../stores/wallet.js';
 
@@ -76,20 +77,23 @@ const auth = useAuthStore();
 const wallet = useWalletStore();
 
 const navItems = [
-  { path: '/', label: 'Mesas', icon: 'style' },
+  { path: '/', label: 'Partidas', icon: 'style' },
   { path: '/historial', label: 'Historial', icon: 'history' },
   { path: '/ranking', label: 'Ranking', icon: 'emoji_events' },
   { path: '/billetera', label: 'Billetera', icon: 'account_balance_wallet' },
   { path: '/perfil', label: 'Perfil', icon: 'person' }
 ];
 
-// El panel de admin solo va en la barra lateral (en el celular se entra desde Perfil)
+// El panel de admin solo va en la barra lateral (en el celular se entra desde Perfil).
 const sidebarItems = computed(() => (auth.isAdmin
   ? [...navItems, { path: '/admin', label: 'Admin', icon: 'admin_panel_settings' }]
   : navItems));
+const mobileItems = navItems;
 
 function isActive(path) {
-  return path === '/' ? route.path === '/' : route.path.startsWith(path);
+  // Partidas también queda marcada en el detalle de un torneo (se entra desde ahí)
+  if (path === '/') return route.path === '/' || route.path.startsWith('/torneos');
+  return route.path.startsWith(path);
 }
 
 async function handleLogout() {
@@ -97,7 +101,15 @@ async function handleLogout() {
   router.push('/login');
 }
 
+// Autorecuperación: si el saldo queda vacío o la pestaña vuelve a estar a la vista, se relee
+watch(() => wallet.balance, (value) => { if (value === null && auth.isAuthenticated) wallet.refresh(); });
+function onVisible() { if (document.visibilityState === 'visible') wallet.refresh(); }
+document.addEventListener('visibilitychange', onVisible);
+onBeforeUnmount(() => document.removeEventListener('visibilitychange', onVisible));
+
 onMounted(async () => {
+  // Un solo socket para toda la app: así llegan los avisos (saldo, partidas de torneo) en cualquier pantalla
+  useSocket().connect();
   // Trae el saldo y dispara el crédito diario si corresponde
   try {
     await wallet.fetch();

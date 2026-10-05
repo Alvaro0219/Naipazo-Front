@@ -19,6 +19,7 @@ export const useGameStore = defineStore('game', {
     log: [], // historial de la mano: se arma pero hoy no se muestra en la mesa (decisión de producto)
     announcement: null,
     finished: null,
+    rematch: null, // { state: 'waiting' | 'requested' | 'declined' | 'expired' | 'started' | 'failed', by?, roomId?, message? }
     replaced: false,
     sending: false,
     receivedAt: 0 // cuándo llegó el último game:state (los plazos vienen como "ms restantes")
@@ -73,6 +74,7 @@ export const useGameStore = defineStore('game', {
       socket.on('game:event', (event) => this.onEvent(event));
       socket.on('game:finished', (summary) => { if (summary.matchId === this.room?.matchId) this.finished = summary; });
       socket.on('game:error', (err) => this.onError(err));
+      socket.on('game:rematch', (data) => this.onRematch(data));
       // Desconexiones del rival: el servidor reenvía game:state con `disconnected`, que es lo que se muestra
     },
     onRoomUpdate(room) {
@@ -103,8 +105,26 @@ export const useGameStore = defineStore('game', {
         announcementTimer = setTimeout(() => { this.announcement = null; }, ANNOUNCEMENT_MS);
       }
     },
+    onRematch(data) {
+      if (!this.finished || data.matchId !== this.finished.matchId) return;
+      // Mi propio pedido vuelve como "requested": para mí es "esperando al rival"
+      this.rematch = data.state === 'requested' && data.by === this.myId ? { ...data, state: 'waiting' } : data;
+    },
+    requestRematch() {
+      if (!this.finished) return;
+      this.rematch = { state: 'waiting' };
+      useSocket().socket.emit('game:rematch', { matchId: this.finished.matchId });
+    },
+    declineRematch() {
+      if (!this.finished) return;
+      useSocket().socket.emit('game:rematch:decline', { matchId: this.finished.matchId });
+    },
     onError(err) {
       this.sending = false;
+      if (err.code?.startsWith('REMATCH')) {
+        this.rematch = { state: 'failed', message: err.message };
+        return;
+      }
       if (err.code === 'SESSION_REPLACED') {
         this.replaced = true;
         return;

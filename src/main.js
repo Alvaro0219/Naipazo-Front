@@ -30,3 +30,10 @@ window.addEventListener('unhandledrejection', (event) => {
 });
 
 app.mount('#app');
+
+// App instalable (PWA): el service worker se registra solo en producción (en desarrollo molesta con Vite)
+if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch((err) => console.warn('No se pudo registrar el service worker:', err));
+  });
+}

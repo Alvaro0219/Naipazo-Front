@@ -32,7 +32,7 @@
               <div class="tr-match__main">
                 <strong>vs {{ row.opponent?.username || '—' }}</strong>
                 <span class="tr-match__meta">
-                  A {{ row.config.targetPoints }} · {{ formatDateTime(row.endedAt) }}
+                  <template v-if="row.tournamentId">Torneo · </template>A {{ row.config.targetPoints }} · {{ formatDateTime(row.endedAt) }}
                   <template v-if="resultDetail(row)"> · {{ resultDetail(row) }}</template>
                 </span>
               </div>

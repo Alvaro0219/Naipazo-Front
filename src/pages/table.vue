@@ -3,8 +3,9 @@
     <header class="tr-table__header">
       <q-btn flat round dense icon="arrow_back" color="white" aria-label="Volver al lobby" @click="goLobby" />
       <div class="tr-table__title">
-        <strong>Mesa {{ game.room?.code || '' }}</strong>
-        <span v-if="game.room">{{ game.room.config.targetPoints }} puntos · sin flor · {{ betLabel }}</span>
+        <strong>{{ tournamentInfo ? tournamentInfo.roundName : `Mesa ${game.room?.code || ''}` }}</strong>
+        <span v-if="tournamentInfo">Torneo {{ tournamentInfo.code }} · {{ game.room?.config.targetPoints }} puntos</span>
+        <span v-else-if="game.room">{{ game.room.config.isPrivate ? 'Sala privada · ' : '' }}{{ game.room.config.targetPoints }} puntos · sin flor · {{ betLabel }}</span>
       </div>
       <q-btn
         v-if="game.view && !game.finished"
@@ -46,8 +47,18 @@
       <div v-else-if="game.room?.status === 'waiting'" class="tr-table__center">
         <q-spinner-dots size="48px" color="accent" />
         <h2>Esperando un rival…</h2>
-        <p>Tu mesa ya aparece en el lobby con este código:</p>
+        <p v-if="game.room.config.isPrivate">Sala privada: pasale este código a quien quieras que juegue.</p>
+        <p v-else>Tu mesa ya aparece en el lobby con este código:</p>
         <div class="tr-table__code tr-num">{{ game.room.code }}</div>
+        <q-btn
+          v-if="game.room.config.isPrivate"
+          flat
+          color="white"
+          no-caps
+          :icon="copied ? 'check' : 'content_copy'"
+          :label="copied ? 'Código copiado' : 'Copiar código'"
+          @click="copyCode"
+        />
         <q-btn outline color="white" no-caps label="Cancelar mesa" :loading="cancelling" @click="handleCancel" />
       </div>
 
@@ -87,8 +98,47 @@
             {{ myChips.net >= 0 ? `+${formatChips(myChips.net)}` : `−${formatChips(-myChips.net)}` }} fichas
           </div>
         </q-card-section>
+        <!-- Torneo: el resultado se sigue en el cuadro -->
+        <q-card-section v-if="game.finished?.tournamentId" class="tr-result__next">
+          {{ tournamentResultText }}
+        </q-card-section>
+
+        <!-- Revancha (solo partidas normales) -->
+        <q-card-section v-else-if="game.finished?.rematchAllowed" class="tr-result__rematch">
+          <p v-if="rematchText" class="tr-result__rematch-text" role="status">{{ rematchText }}</p>
+          <div class="tr-result__rematch-actions">
+            <q-btn
+              v-if="!rematchClosed"
+              color="accent"
+              text-color="dark"
+              unelevated
+              no-caps
+              icon="replay"
+              :label="rematchRequestedByRival ? 'Aceptar revancha' : 'Revancha'"
+              :loading="game.rematch?.state === 'waiting'"
+              @click="game.requestRematch()"
+            />
+            <q-btn v-if="rematchRequestedByRival" flat no-caps label="No, gracias" @click="game.declineRematch()" />
+          </div>
+        </q-card-section>
+
         <q-card-actions align="center">
-          <q-btn color="primary" unelevated no-caps label="Volver al lobby" @click="goLobby" />
+          <q-btn
+            v-if="game.finished?.tournamentId"
+            color="primary"
+            unelevated
+            no-caps
+            label="Ver el torneo"
+            :to="`/torneos/${game.finished.tournamentId}`"
+          />
+          <q-btn
+            color="primary"
+            :flat="Boolean(game.finished?.tournamentId)"
+            :unelevated="!game.finished?.tournamentId"
+            no-caps
+            label="Volver al lobby"
+            @click="leaveAfterMatch"
+          />
         </q-card-actions>
       </q-card>
     </q-dialog>
@@ -103,7 +153,7 @@ import ConnectionBanner from '../components/game/ConnectionBanner.vue';
 import ScoreBoard from '../components/game/ScoreBoard.vue';
 import TableBoard from '../components/game/TableBoard.vue';
 import { useSocket } from '../composables/useSocket.js';
-import { cancelRoom } from '../services/api.js';
+import { cancelRoom, fetchTournament } from '../services/api.js';
 import { useGameStore } from '../stores/game.js';
 import { formatChips } from '../utils/format.js';
 
@@ -118,6 +168,18 @@ const opponentName = computed(() => {
   if (game.opponent) return game.nameOf(game.opponent.id);
   return game.room?.seats?.find((s) => s.userId !== game.myId)?.username || 'Rival';
 });
+
+// Copiar el código de una sala privada para pasárselo al rival
+const copied = ref(false);
+async function copyCode() {
+  try {
+    await navigator.clipboard.writeText(game.room.code);
+    copied.value = true;
+    setTimeout(() => { copied.value = false; }, 2000);
+  } catch {
+    $q.notify({ message: `Código de la sala: ${game.room.code}` });
+  }
+}
 
 const betLabel = computed(() => {
   const bet = game.room?.config?.bet;
@@ -137,6 +199,49 @@ const theirScore = computed(() => game.finished?.score?.[1 - game.myTeam] ?? 0);
 function goLobby() {
   router.push('/');
 }
+
+// Revancha
+const rematchRequestedByRival = computed(() => game.rematch?.state === 'requested' && game.rematch.by !== game.myId);
+const rematchClosed = computed(() => ['declined', 'expired', 'failed', 'started'].includes(game.rematch?.state));
+const rematchText = computed(() => {
+  const r = game.rematch;
+  if (!r) return '';
+  if (r.state === 'waiting') return `Esperando que ${opponentName.value} acepte…`;
+  if (r.state === 'requested' && r.by !== game.myId) return `${opponentName.value} quiere la revancha.`;
+  if (r.state === 'declined') return r.by === game.myId ? 'Rechazaste la revancha.' : `${opponentName.value} no quiere la revancha.`;
+  if (r.state === 'expired') return 'La revancha caducó.';
+  if (r.state === 'failed') return r.message || 'No se pudo armar la revancha.';
+  if (r.state === 'started') return '¡Revancha! Entrando a la mesa nueva…';
+  return '';
+});
+
+// Aceptada por los dos: el servidor arma la mesa nueva y nos lleva a ella
+watch(() => game.rematch, (r) => {
+  if (r?.state === 'started' && r.roomId) router.replace(`/mesa/${r.roomId}`);
+});
+
+// Al irse, si había una revancha pedida, se rechaza (caduca para los dos)
+function leaveAfterMatch() {
+  if (game.rematch && !rematchClosed.value) game.declineRematch();
+  goLobby();
+}
+
+// Partida de torneo: código y ronda para el encabezado
+const tournamentInfo = ref(null);
+const tournamentResultText = computed(() => {
+  if (!iWon.value) return 'Quedaste afuera del torneo.';
+  return tournamentInfo.value?.roundName === 'Final' ? '¡Sos el campeón del torneo!' : 'Avanzás en el torneo.';
+});
+watch(() => game.view?.tournament?.id, async (id) => {
+  if (!id) { tournamentInfo.value = null; return; }
+  try {
+    const t = await fetchTournament(id);
+    const match = t.bracket.find((m) => m.roomId === game.roomId);
+    tournamentInfo.value = { code: t.code, roundName: match?.roundName || 'Torneo' };
+  } catch {
+    tournamentInfo.value = null;
+  }
+}, { immediate: true });
 
 function retake() {
   game.enterRoom(route.params.roomId);
@@ -254,6 +359,35 @@ watch(() => route.params.roomId, (id) => id && game.enterRoom(id));
 }
 
 .tr-result { width: min(92vw, 360px); }
+
+.tr-result__next {
+  padding-top: 0;
+  text-align: center;
+  color: #475569;
+  font-weight: 600;
+}
+
+.tr-result__rematch {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding-top: 0;
+}
+
+.tr-result__rematch-text {
+  margin: 0;
+  color: #475569;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.tr-result__rematch-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
 
 .tr-result__body {
   display: flex;

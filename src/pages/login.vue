@@ -4,7 +4,7 @@
       <div class="tr-auth-brand">
         <img src="/favicon.svg" alt="" />
         <div>
-          <strong>Truco Online</strong>
+          <strong>Naipazo</strong>
           <span>Entrá y jugá con tus fichas del día</span>
         </div>
       </div>

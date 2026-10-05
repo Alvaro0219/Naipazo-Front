@@ -1,4 +1,4 @@
-// Service worker mínimo de Truco Online: hace que la app sea instalable y muestra una pantalla
+// Service worker mínimo de Naipazo: hace que la app sea instalable y muestra una pantalla
 // "Sin conexión" si no hay red al abrirla. NO cachea la API, los sockets ni el juego: todo eso
 // necesita conexión siempre. Se registra solo en producción (ver src/main.js).
 const CACHE = 'truco-offline-v1';

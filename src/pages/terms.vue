@@ -2,7 +2,7 @@
   <div class="tr-page-shell tr-terms">
     <header class="tr-page-header">
       <h1>Términos y condiciones</h1>
-      <p>Truco Online — Fase 1 (fichas virtuales)</p>
+      <p>Naipazo: truco online con fichas virtuales</p>
     </header>
 
     <section class="tr-section-card">

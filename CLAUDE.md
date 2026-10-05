@@ -2,7 +2,7 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-Frontend de **Truco Online** (Fase 1: fichas virtuales). Vue 3 `<script setup>` + Quasar 2 + Vite + Pinia +
+Frontend de **Naipazo** (truco online con fichas virtuales). Vue 3 `<script setup>` + Quasar 2 + Vite + Pinia +
 Vue Router 4 + Axios. El backend vive en un repo hermano: `../truco-back` (necesario para casi todo).
 La especificación completa está en `../PROYECTO_TRUCO_ONLINE.md`; la arquitectura sale de la skill
 `fullstack-scaffold` (`~/.claude/skills/fullstack-scaffold/frontend-architecture.md`).
@@ -78,4 +78,12 @@ el corte de red se simula con `setOffline` + `window.__socketDebug.socket` (solo
 - **App instalable (M7):** `public/manifest.webmanifest`, íconos generados con `node scripts/build-icons.mjs`
   (mismo dibujo que `favicon.svg`), `public/sw.js` mínimo (solo pantalla `offline.html`; no cachea API ni
   sockets) registrado en `main.js` únicamente en producción.
+- **Cuentas (P4):** `/recuperar`, `/restablecer?token=`, `/verificar-email?token=` (públicas) y `/privacidad`.
+  `EmailVerifyBanner` en el lobby; `auth.refreshUser()` relee el usuario si figura sin verificar (al montar
+  `AppLayout` y al volver a la pestaña), así el aviso desaparece si verificó desde otro dispositivo.
+- **Integridad (P5):** `PrivateRoomDialog` limita la apuesta a `config.privateMaxBet` (de `GET /api/config`);
+  `ChipFlowsCard` en Administración. **Vencimientos (P6):** la mesa y el torneo muestran `cancelReason: 'expired'`.
+- **Diagnóstico (P3):** en desarrollo, `window.__socketDebug` guarda los sockets creados, cada `room:join` con su
+  origen y el socket (lo usan los e2e). El store `wallet` guarda `lastSource` e ignora saldos no numéricos.
+- Git: siempre en `main`, sin ramas nuevas; no hacer push sin confirmarlo.
 - Despliegue en Cloudflare Pages; `public/_redirects` resuelve el ruteo SPA.

@@ -10,12 +10,19 @@ export const useWalletStore = defineStore('wallet', {
     balance: null,
     dailyGrantAmount: null,
     nextGrantAt: null,
-    loading: false
+    loading: false,
+    lastSource: null // de dónde vino el último saldo (diagnóstico)
   }),
   actions: {
     /** Incorpora saldo + estado del crédito diario y avisa si se acaban de acreditar fichas. */
-    ingest({ balance, dailyGrant } = {}) {
-      if (typeof balance === 'number') this.balance = balance;
+    ingest({ balance, dailyGrant } = {}, source = 'desconocido') {
+      // Un aviso sin saldo numérico nunca pisa el último saldo conocido
+      if (typeof balance === 'number') {
+        this.balance = balance;
+        this.lastSource = source;
+      } else if (balance !== undefined) {
+        console.warn('[wallet] se ignoró un saldo inválido', { balance, source });
+      }
       if (dailyGrant) {
         this.dailyGrantAmount = dailyGrant.amount;
         this.nextGrantAt = dailyGrant.nextGrantAt;
@@ -40,7 +47,7 @@ export const useWalletStore = defineStore('wallet', {
     async fetch() {
       this.loading = true;
       try {
-        this.ingest(await fetchWallet());
+        this.ingest(await fetchWallet(), 'GET /wallet');
       } finally {
         this.loading = false;
       }

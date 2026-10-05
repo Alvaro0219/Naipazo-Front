@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 import { Notify } from 'quasar';
-import { useSocket } from '../composables/useSocket.js';
+import { socketDebug, useSocket } from '../composables/useSocket.js';
 import { announcementFor, describeEvent } from '../utils/gameText.js';
 
 const LOG_SIZE = 8;
@@ -11,6 +11,11 @@ let announcementTimer = null;
 
 // Estado de la mesa actual. Lo alimentan los eventos del socket; el servidor es la única autoridad:
 // `view` es el estado proyectado para este jugador y `view.availableActions` dice qué botones mostrar.
+function joinRoom(socket, roomId, origin) {
+  socketDebug({ roomId, origin });
+  socket.emit('room:join', { roomId });
+}
+
 export const useGameStore = defineStore('game', {
   state: () => ({
     roomId: null,
@@ -56,7 +61,7 @@ export const useGameStore = defineStore('game', {
       const { socket, connect } = useSocket();
       this.bindListeners(socket);
       connect();
-      if (socket.connected) socket.emit('room:join', { roomId });
+      if (socket.connected) joinRoom(socket, roomId, 'enterRoom');
     },
     leaveTable() {
       this.$reset();
@@ -67,7 +72,7 @@ export const useGameStore = defineStore('game', {
 
       // Al (re)conectar se vuelve a pedir la mesa: el servidor reenvía game:state
       socket.on('connect', () => {
-        if (this.roomId) socket.emit('room:join', { roomId: this.roomId });
+        if (this.roomId) joinRoom(socket, this.roomId, 'connect');
       });
       socket.on('room:update', (room) => this.onRoomUpdate(room));
       socket.on('game:state', (view) => this.onState(view));
@@ -82,7 +87,7 @@ export const useGameStore = defineStore('game', {
       const startedNow = room.status === 'playing' && this.room?.status === 'waiting';
       this.room = room;
       // Arrancó la partida mientras esperábamos: nos sumamos a la mesa
-      if (startedNow) useSocket().socket.emit('room:join', { roomId: this.roomId });
+      if (startedNow) joinRoom(useSocket().socket, this.roomId, 'roomStarted');
     },
     onState(view) {
       if (this.room && view.roomId !== this.roomId) return;

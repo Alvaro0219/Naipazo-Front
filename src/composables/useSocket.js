@@ -12,7 +12,16 @@ import { useWalletStore } from '../stores/wallet.js';
 let socket = null;
 const status = ref('idle'); // idle | connecting | connected | disconnected
 
+/** Solo en desarrollo: rastro para diagnosticar conexiones duplicadas (window.__socketDebug). */
+export function socketDebug(entry) {
+  if (!import.meta.env.DEV) return;
+  const d = (window.__socketDebug ??= { created: 0, joins: [] });
+  if (entry === 'created') d.created += 1;
+  else d.joins.push({ ...entry, socketId: socket?.id, at: Date.now() });
+}
+
 function createSocket() {
+  socketDebug('created');
   const s = io(WS_URL, {
     autoConnect: false,
     transports: ['websocket', 'polling'],
@@ -43,7 +52,7 @@ function createSocket() {
     }
   });
 
-  s.on('wallet:update', (data) => useWalletStore().ingest(data));
+  s.on('wallet:update', (data) => useWalletStore().ingest(data, 'wallet:update'));
 
   // Arrancó una partida de un torneo en el que estoy: se va directo a la mesa
   s.on('tournament:match', ({ roomId, roundName }) => {

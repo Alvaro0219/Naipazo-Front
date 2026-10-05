@@ -102,7 +102,12 @@ async function handleLogout() {
 }
 
 // Autorecuperación: si el saldo queda vacío o la pestaña vuelve a estar a la vista, se relee
-watch(() => wallet.balance, (value) => { if (value === null && auth.isAuthenticated) wallet.refresh(); });
+watch(() => wallet.balance, (value, previous) => {
+  if (value !== null || !auth.isAuthenticated) return;
+  // No debería pasar con la sesión abierta: se registra para diagnosticar y se relee
+  if (previous !== null && previous !== undefined) console.warn('[wallet] el saldo quedó vacío', { previous, lastSource: wallet.lastSource });
+  wallet.refresh();
+});
 function onVisible() { if (document.visibilityState === 'visible') wallet.refresh(); }
 document.addEventListener('visibilitychange', onVisible);
 onBeforeUnmount(() => document.removeEventListener('visibilitychange', onVisible));

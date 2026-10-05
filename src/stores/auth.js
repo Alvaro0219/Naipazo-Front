@@ -41,7 +41,7 @@ export const useAuthStore = defineStore('auth', {
       this.refreshToken = res.refreshToken;
       this.user = res.user;
       this.saveSession();
-      useWalletStore().ingest({ balance: res.user?.balance, dailyGrant: res.dailyGrant });
+      useWalletStore().ingest({ balance: res.user?.balance, dailyGrant: res.dailyGrant }, 'sesión');
     },
     async login(identifier, password) {
       this.applySession(await loginApi(identifier, password));

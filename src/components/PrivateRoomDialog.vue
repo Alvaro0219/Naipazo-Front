@@ -140,14 +140,16 @@ const targetPoints = ref(15);
 const bet = ref(0);
 let uuid = crypto.randomUUID();
 
-const maxAllowed = computed(() => Math.min(config.value.maxBet, wallet.balance ?? 0));
+// Las salas privadas tienen un tope propio (evita traspasar fichas entre cuentas)
+const privateMax = computed(() => Math.min(config.value.maxBet, config.value.privateMaxBet ?? config.value.maxBet));
+const maxAllowed = computed(() => Math.min(privateMax.value, wallet.balance ?? 0));
 const betHint = computed(() => (bet.value > 0
   ? `Tenés ${formatChips(wallet.balance ?? 0)} fichas. El ganador se lleva ${formatChips((Number(bet.value) || 0) * 2)}.`
-  : 'Escribí 0 para jugar gratis.'));
+  : `Escribí 0 para jugar gratis. Máximo ${formatChips(privateMax.value)} fichas.`));
 const betRules = [
   (v) => (v !== null && v !== '' && Number.isInteger(v)) || 'Escribí un número entero de fichas (0 para jugar gratis)',
   (v) => v === 0 || v >= config.value.minBet || `La apuesta mínima es de ${formatChips(config.value.minBet)} fichas`,
-  (v) => v <= config.value.maxBet || `La apuesta máxima es de ${formatChips(config.value.maxBet)} fichas`,
+  (v) => v <= privateMax.value || `En salas privadas la apuesta máxima es de ${formatChips(privateMax.value)} fichas`,
   (v) => v <= (wallet.balance ?? 0) || 'No tenés fichas suficientes'
 ];
 

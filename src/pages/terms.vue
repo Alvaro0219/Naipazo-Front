@@ -12,7 +12,7 @@
         bienes, servicios ni premios de ningún tipo. No se pueden comprar, vender, transferir ni retirar.
       </p>
       <p>
-        Solo se obtienen mediante el crédito diario gratuito y ganando partidas. El saldo puede ser ajustado
+        Solo se obtienen mediante el crédito diario gratuito (que requiere tener el email verificado) y ganando partidas o torneos. El saldo puede ser ajustado
         por la administración para corregir errores o abusos.
       </p>
     </section>
@@ -25,8 +25,15 @@
     <section class="tr-section-card">
       <h2>3. Juego limpio</h2>
       <p>
-        No está permitido usar varias cuentas, coordinar resultados con otros jugadores, ni usar programas
-        que automaticen jugadas. Las cuentas que incumplan estas reglas pueden ser suspendidas.
+        No está permitido usar varias cuentas, coordinar resultados con otros jugadores, perder a propósito
+        para pasarle fichas a otra cuenta, ni usar programas que automaticen jugadas.
+      </p>
+      <p>
+        <strong>Está prohibido vender, comprar o transferir fichas o cuentas</strong>, dentro o fuera de la
+        plataforma. Las cuentas que incumplan estas reglas pueden ser bloqueadas y su saldo ajustado.
+      </p>
+      <p>
+        Las partidas de salas privadas no cuentan para el ranking y tienen un tope de apuesta.
       </p>
     </section>
 

@@ -5,9 +5,11 @@ import { announcementFor, describeEvent } from '../utils/gameText.js';
 
 const LOG_SIZE = 8;
 const ANNOUNCEMENT_MS = 2200;
+const SIGN_TOAST_MS = 3500;
 
 let listenersBound = false;
 let announcementTimer = null;
+let signTimer = null;
 
 // Estado de la mesa actual. Lo alimentan los eventos del socket; el servidor es la única autoridad:
 // `view` es el estado proyectado para este jugador y `view.availableActions` dice qué botones mostrar.
@@ -27,12 +29,18 @@ export const useGameStore = defineStore('game', {
     rematch: null, // { state: 'waiting' | 'requested' | 'declined' | 'expired' | 'started' | 'failed', by?, roomId?, message? }
     replaced: false,
     sending: false,
+    signs: [], // 2 vs 2: señas que me hizo mi compañero en esta mano ({ from, sign, at })
+    lastSign: null, // la última, para mostrarla unos segundos junto al compañero
     receivedAt: 0 // cuándo llegó el último game:state (los plazos vienen como "ms restantes")
   }),
   getters: {
     myId: (s) => s.view?.me?.id ?? null,
     myTeam: (s) => s.view?.me?.team ?? null,
     opponent: (s) => s.view?.players?.find((p) => p.id !== s.view.me.id) ?? null,
+    is2v2: (s) => (s.view?.mode || s.room?.config?.mode) === '2v2',
+    /** 2 vs 2: mi compañero y mis rivales (cada uno con su asiento) */
+    partner: (s) => s.view?.players?.find((p) => p.team === s.view.me.team && p.id !== s.view.me.id) ?? null,
+    rivals: (s) => s.view?.players?.filter((p) => p.team !== s.view.me.team) ?? [],
     nameOf: (s) => (playerId) => {
       if (playerId === s.view?.me?.id) return 'Vos';
       return s.view?.usernames?.[playerId] || s.room?.seats?.find((x) => x.userId === playerId)?.username || 'Rival';
@@ -52,6 +60,11 @@ export const useGameStore = defineStore('game', {
     opponentGraceDeadline: (s) => {
       const away = Object.entries(s.view?.disconnected || {}).find(([id]) => id !== s.view.me.id);
       return away ? s.receivedAt + away[1].remainingMs : null;
+    },
+    /** Otro jugador desconectado (en 2 vs 2 puede ser cualquiera de los tres): { id, deadline } o null */
+    awayPlayer: (s) => {
+      const away = Object.entries(s.view?.disconnected || {}).find(([id]) => id !== s.view.me.id);
+      return away ? { id: away[0], deadline: s.receivedAt + away[1].remainingMs } : null;
     }
   },
   actions: {
@@ -80,6 +93,7 @@ export const useGameStore = defineStore('game', {
       socket.on('game:finished', (summary) => { if (summary.matchId === this.room?.matchId) this.finished = summary; });
       socket.on('game:error', (err) => this.onError(err));
       socket.on('game:rematch', (data) => this.onRematch(data));
+      socket.on('game:sign', (data) => this.onSign(data));
       // Desconexiones del rival: el servidor reenvía game:state con `disconnected`, que es lo que se muestra
     },
     onRoomUpdate(room) {
@@ -94,12 +108,25 @@ export const useGameStore = defineStore('game', {
       this.view = view;
       this.receivedAt = Date.now();
       this.sending = false;
+      // El servidor manda las señas que recibí en la mano en curso (así se recuperan al reconectar)
+      if (Array.isArray(view.signs)) this.signs = view.signs;
+    },
+    onSign(data) {
+      if (!this.view || data.matchId !== this.view.matchId) return;
+      this.signs = [...this.signs, { from: data.from, sign: data.sign, at: data.at }];
+      this.lastSign = { ...data, key: Date.now() };
+      clearTimeout(signTimer);
+      signTimer = setTimeout(() => { this.lastSign = null; }, SIGN_TOAST_MS);
+    },
+    sendSign(sign) {
+      if (!this.view) return;
+      useSocket().socket.emit('game:sign', { matchId: this.view.matchId, sign });
     },
     onEvent(event) {
       if (!this.view) return;
       const text = describeEvent(event, {
         nameOf: (id) => this.nameOf(id),
-        teamName: (team) => (team === this.myTeam ? 'Vos' : this.nameOf(this.opponent?.id))
+        teamName: (team) => (team === this.myTeam ? 'Vos' : (this.is2v2 ? 'Ellos' : this.nameOf(this.opponent?.id)))
       });
       if (text) this.log = [{ id: `${Date.now()}-${Math.random()}`, text }, ...this.log].slice(0, LOG_SIZE);
 
@@ -112,8 +139,9 @@ export const useGameStore = defineStore('game', {
     },
     onRematch(data) {
       if (!this.finished || data.matchId !== this.finished.matchId) return;
-      // Mi propio pedido vuelve como "requested": para mí es "esperando al rival"
-      this.rematch = data.state === 'requested' && data.by === this.myId ? { ...data, state: 'waiting' } : data;
+      // Si ya la pedí o acepté, para mí es "esperando a los demás" (en 2 vs 2 tienen que aceptar los 4)
+      const mine = data.state === 'requested' && (data.by === this.myId || data.accepted?.includes(this.myId));
+      this.rematch = mine ? { ...data, state: 'waiting' } : data;
     },
     requestRematch() {
       if (!this.finished) return;
@@ -128,6 +156,10 @@ export const useGameStore = defineStore('game', {
       this.sending = false;
       if (err.code?.startsWith('REMATCH')) {
         this.rematch = { state: 'failed', message: err.message };
+        return;
+      }
+      if (err.code === 'SIGN_RATE_LIMITED') {
+        Notify.create({ message: err.message, timeout: 1500 });
         return;
       }
       if (err.code === 'SESSION_REPLACED') {

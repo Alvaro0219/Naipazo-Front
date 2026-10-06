@@ -59,6 +59,17 @@
           text-color="dark"
           :options="[{ label: 'Todas', value: 'all' }, { label: 'Mesas', value: 'room' }, { label: 'Torneos', value: 'tournament' }]"
         />
+        <q-btn-toggle
+          v-model="modeFilter"
+          no-caps
+          unelevated
+          rounded
+          toggle-color="primary"
+          color="white"
+          text-color="dark"
+          aria-label="Modo"
+          :options="[{ label: 'Todos', value: 'all' }, { label: '1 vs 1', value: '1v1' }, { label: '2 vs 2', value: '2v2' }]"
+        />
       </div>
       <span class="tr-lobby-live" :class="{ 'tr-lobby-live--on': status === 'connected' }">
         <span class="tr-lobby-live__dot" />{{ status === 'connected' ? 'En vivo' : 'Conectando…' }}
@@ -74,19 +85,21 @@
     >
       <ul class="tr-game-list">
         <li v-for="item in items" :key="`${item.kind}-${item.data.id}`">
-          <!-- Mesa: 1 contra 1 -->
+          <!-- Mesa: 1 vs 1 o 2 vs 2 -->
           <div v-if="item.kind === 'room'" class="tr-game tr-game--room">
-            <span class="tr-game__kind"><q-icon name="style" size="16px" />Mesa</span>
+            <span class="tr-game__kind"><q-icon :name="is2v2(item.data) ? 'groups' : 'style'" size="16px" />{{ is2v2(item.data) ? 'Mesa 2 vs 2' : 'Mesa' }}</span>
             <div class="tr-game__main">
               <strong>{{ item.data.seats[0]?.username }} <span class="tr-game__code">{{ item.data.code }}</span></strong>
               <span class="tr-game__meta">
+                <template v-if="is2v2(item.data)"><strong class="tr-num">{{ item.data.seats.length }} de 4</strong> · </template>
                 A {{ item.data.config.targetPoints }} · sin flor
                 <span v-if="item.data.config.bet" class="tr-game__chips">{{ formatChips(item.data.config.bet) }} fichas</span>
                 <template v-else>· gratis</template>
               </span>
+              <span v-if="is2v2(item.data)" class="tr-game__meta">{{ teamsLabel(item.data) }}</span>
             </div>
             <q-btn
-              v-if="item.data.hostId === auth.user?.id"
+              v-if="item.data.seats.some((x) => x.userId === auth.user?.id)"
               outline
               color="primary"
               no-caps
@@ -183,6 +196,7 @@ const tournaments = ref(null);
 const myRoom = ref(null);
 const myTournament = ref(null);
 const kindFilter = ref('all');
+const modeFilter = ref('all'); // los torneos son 1 vs 1
 const showCreate = ref(false);
 const showPrivate = ref(false);
 const joiningId = ref(null);
@@ -196,6 +210,7 @@ const items = computed(() => [
   ...(tournaments.value || []).map((data) => ({ kind: 'tournament', data }))
 ]
   .filter((i) => kindFilter.value === 'all' || i.kind === kindFilter.value)
+  .filter((i) => modeFilter.value === 'all' || modeOf(i) === modeFilter.value)
   .sort((a, b) => new Date(b.data.createdAt) - new Date(a.data.createdAt)));
 
 const emptyLabel = computed(() => {
@@ -203,6 +218,22 @@ const emptyLabel = computed(() => {
   if (kindFilter.value === 'tournament') return 'No hay torneos con inscripción abierta. ¡Creá uno!';
   return 'No hay partidas abiertas. ¡Creá una mesa o un torneo!';
 });
+
+function is2v2(room) {
+  return room.config.mode === '2v2';
+}
+
+function modeOf(item) {
+  return item.kind === 'room' && is2v2(item.data) ? '2v2' : '1v1';
+}
+
+/** "Pareja A: Juan, Ana · Pareja B: Leo" (asientos 0 y 2 contra 1 y 3) */
+function teamsLabel(room) {
+  return [0, 1].map((team) => {
+    const names = room.seats.filter((x) => x.team === team).map((x) => x.username);
+    return `Pareja ${team === 0 ? 'A' : 'B'}: ${names.length ? names.join(', ') : 'libre'}`;
+  }).join(' · ');
+}
 
 function hostName(t) {
   return t.entrants.find((e) => e.userId === t.hostId)?.username || '';
@@ -267,7 +298,9 @@ function handleJoinRoom(room) {
   $q.dialog({
     title: `Mesa por ${formatChips(room.config.bet)} fichas`,
     message: `Al empezar se descuentan ${formatChips(room.config.bet)} fichas de tu saldo. `
-      + 'Si ganás te llevás el pozo; si perdés o abandonás, las perdés.',
+      + (is2v2(room)
+        ? 'Si gana tu pareja, cada uno se lleva el doble; si pierden o abandonás, las perdés.'
+        : 'Si ganás te llevás el pozo; si perdés o abandonás, las perdés.'),
     cancel: { label: 'Cancelar', flat: true, noCaps: true },
     ok: { label: 'Jugar', color: 'primary', unelevated: true, noCaps: true }
   }).onOk(go);

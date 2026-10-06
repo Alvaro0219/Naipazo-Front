@@ -17,13 +17,14 @@ const props = defineProps({
   sections: { type: Array, default: () => [] }, // 'malas' | 'buenas' | null por equipo
   myTeam: { type: Number, required: true },
   opponentName: { type: String, default: 'Rival' },
+  myLabel: { type: String, default: 'Vos' }, // 2 vs 2: "Nosotros"
   targetPoints: { type: Number, required: true }
 });
 
 const rows = computed(() => [props.myTeam, 1 - props.myTeam].map((team) => ({
   team,
   mine: team === props.myTeam,
-  name: team === props.myTeam ? 'Vos' : props.opponentName,
+  name: team === props.myTeam ? props.myLabel : props.opponentName,
   points: props.score[team],
   section: props.sections[team]
 })));

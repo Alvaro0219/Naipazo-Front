@@ -166,7 +166,7 @@ export async function fetchMyRoom() {
   return unwrap(data, 'No se pudo cargar tu mesa', status).room;
 }
 
-/** payload: { uuid, targetPoints, bet, isPrivate } — una sala privada no aparece en el lobby */
+/** payload: { uuid, targetPoints, bet, isPrivate, mode: '1v1' | '2v2' } — una sala privada no aparece en el lobby */
 export async function createRoom(payload) {
   const { data, status } = await api.post('/rooms', payload);
   return unwrap(data, 'No se pudo crear la sala', status).room;
@@ -178,14 +178,27 @@ export async function fetchRoomByCode(code) {
   return unwrap(data, 'No encontramos esa sala', status).room;
 }
 
-export async function joinRoomByCode(code) {
-  const { data, status } = await api.post('/rooms/join-by-code', { code });
+/** `seat` (0–3) solo en 2 vs 2; sin asiento, el servidor da el primero libre */
+export async function joinRoomByCode(code, seat = null) {
+  const { data, status } = await api.post('/rooms/join-by-code', seat === null ? { code } : { code, seat });
   return unwrap(data, 'No se pudo entrar a la sala', status).room;
 }
 
-export async function joinRoom(roomId) {
-  const { data, status } = await api.post(`/rooms/${roomId}/join`);
+export async function joinRoom(roomId, seat = null) {
+  const { data, status } = await api.post(`/rooms/${roomId}/join`, seat === null ? {} : { seat });
   return unwrap(data, 'No se pudo entrar a la sala', status).room;
+}
+
+/** 2 vs 2: cambiarse a un asiento libre mientras la sala espera */
+export async function changeSeat(roomId, seat) {
+  const { data, status } = await api.post(`/rooms/${roomId}/seat`, { seat });
+  return unwrap(data, 'No se pudo cambiar de asiento', status).room;
+}
+
+/** Salir de una sala en espera (si sale el anfitrión, pasa al siguiente) */
+export async function leaveRoom(roomId) {
+  const { data, status } = await api.post(`/rooms/${roomId}/leave`);
+  return unwrap(data, 'No se pudo salir de la sala', status).room;
 }
 
 export async function cancelRoom(roomId) {

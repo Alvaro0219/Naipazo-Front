@@ -5,7 +5,7 @@
       <div class="tr-table__title">
         <strong>{{ tournamentInfo ? tournamentInfo.roundName : `Mesa ${game.room?.code || ''}` }}</strong>
         <span v-if="tournamentInfo">Torneo {{ tournamentInfo.code }} · {{ game.room?.config.targetPoints }} puntos</span>
-        <span v-else-if="game.room">{{ game.room.config.isPrivate ? 'Sala privada · ' : '' }}{{ game.room.config.targetPoints }} puntos · sin flor · {{ betLabel }}</span>
+        <span v-else-if="game.room">{{ game.room.config.isPrivate ? 'Sala privada · ' : '' }}{{ game.is2v2 ? '2 vs 2 · ' : '' }}{{ game.room.config.targetPoints }} puntos · sin flor · {{ betLabel }}</span>
       </div>
       <q-btn
         v-if="game.view && !game.finished"
@@ -22,7 +22,8 @@
         :score="game.view.score"
         :sections="game.view.scoreSections"
         :my-team="game.view.me.team"
-        :opponent-name="opponentName"
+        :opponent-name="game.is2v2 ? 'Ellos' : opponentName"
+        :my-label="game.is2v2 ? 'Nosotros' : 'Vos'"
         :target-points="game.view.config.targetPoints"
       />
     </header>
@@ -30,8 +31,8 @@
     <ConnectionBanner
       v-if="!game.finished"
       :socket-status="status"
-      :opponent-grace-deadline="game.opponentGraceDeadline"
-      :opponent-name="opponentName"
+      :opponent-grace-deadline="game.awayPlayer?.deadline ?? null"
+      :opponent-name="game.awayPlayer ? game.nameOf(game.awayPlayer.id) : opponentName"
     />
 
     <main class="tr-table__main">
@@ -41,6 +42,39 @@
         <h2>Abriste esta mesa en otra pestaña</h2>
         <p>Para seguir jugando acá, volvé a tomar la mesa.</p>
         <q-btn color="accent" text-color="dark" unelevated no-caps label="Jugar en esta pestaña" @click="retake" />
+      </div>
+
+      <!-- Sala en espera 2 vs 2: asientos por pareja (los libres se tocan para cambiarse) -->
+      <div v-else-if="game.room?.status === 'waiting' && game.is2v2" class="tr-table__center">
+        <h2>Esperando jugadores · {{ game.room.seats.length }} de 4</h2>
+        <p>Compañeros enfrentados: la pareja A juega contra la pareja B. Tocá un lugar libre para cambiarte.</p>
+        <div class="tr-wait4">
+          <div v-for="team in [0, 1]" :key="team" class="tr-wait4__team">
+            <span class="tr-wait4__team-name">Pareja {{ team === 0 ? 'A' : 'B' }}</span>
+            <button
+              v-for="seatNo in [team, team + 2]"
+              :key="seatNo"
+              type="button"
+              class="tr-wait4__seat"
+              :class="{ 'tr-wait4__seat--me': seatUser(seatNo)?.userId === auth.user?.id, 'tr-wait4__seat--free': !seatUser(seatNo) }"
+              :disabled="Boolean(seatUser(seatNo)) || movingSeat"
+              @click="moveTo(seatNo)"
+            >
+              {{ seatUser(seatNo) ? (seatUser(seatNo).userId === auth.user?.id ? 'Vos' : seatUser(seatNo).username) : 'Libre' }}
+            </button>
+          </div>
+        </div>
+        <div class="tr-table__code tr-num">{{ game.room.code }}</div>
+        <q-btn
+          v-if="game.room.config.isPrivate"
+          flat
+          color="white"
+          no-caps
+          :icon="copied ? 'check' : 'content_copy'"
+          :label="copied ? 'Código copiado' : 'Copiar código'"
+          @click="copyCode"
+        />
+        <q-btn outline color="white" no-caps label="Salir de la mesa" :loading="cancelling" @click="handleLeave" />
       </div>
 
       <!-- Sala en espera -->
@@ -69,6 +103,21 @@
         <q-btn color="accent" text-color="dark" unelevated no-caps label="Volver al lobby" @click="goLobby" />
       </div>
 
+      <TableBoard2v2
+        v-else-if="game.view && game.is2v2"
+        :view="game.view"
+        :turn-clock="game.finished ? null : game.turnClock"
+        :announcement="game.announcement"
+        :sending="game.sending"
+        :name-of="game.nameOf"
+        :signs="game.signs"
+        :last-sign="game.lastSign"
+        :disconnected-ids="Object.keys(game.view.disconnected || {})"
+        @play="(cardId) => game.sendAction('PLAY_CARD', { cardId })"
+        @action="handleAction"
+        @sign="game.sendSign"
+      />
+
       <TableBoard
         v-else-if="game.view"
         :view="game.view"
@@ -90,10 +139,11 @@
       <q-card class="tr-result">
         <q-card-section class="tr-result__body">
           <q-icon :name="iWon ? 'emoji_events' : 'sentiment_dissatisfied'" size="56px" :color="iWon ? 'accent' : 'grey-6'" />
-          <h2>{{ iWon ? '¡Ganaste la partida!' : `Ganó ${opponentName}` }}</h2>
+          <h2>{{ resultTitle }}</h2>
           <p v-if="reasonText" class="tr-result__reason">{{ reasonText }}</p>
+          <p v-if="myResult === 'no-result'" class="tr-result__reason">Abandonó tu compañero: para vos la partida queda sin resultado y recuperás tu apuesta.</p>
           <p v-if="game.finished" class="tr-num">
-            Vos {{ myScore }} – {{ theirScore }} {{ opponentName }}
+            {{ game.is2v2 ? 'Nosotros' : 'Vos' }} {{ myScore }} – {{ theirScore }} {{ game.is2v2 ? 'Ellos' : opponentName }}
           </p>
           <div v-if="myChips" class="tr-result__chips tr-num" :class="myChips.net >= 0 ? 'tr-result__chips--won' : 'tr-result__chips--lost'">
             {{ myChips.net >= 0 ? `+${formatChips(myChips.net)}` : `−${formatChips(-myChips.net)}` }} fichas
@@ -153,8 +203,10 @@ import { useRoute, useRouter } from 'vue-router';
 import ConnectionBanner from '../components/game/ConnectionBanner.vue';
 import ScoreBoard from '../components/game/ScoreBoard.vue';
 import TableBoard from '../components/game/TableBoard.vue';
+import TableBoard2v2 from '../components/game/TableBoard2v2.vue';
 import { useSocket } from '../composables/useSocket.js';
-import { cancelRoom, fetchTournament } from '../services/api.js';
+import { cancelRoom, changeSeat, fetchTournament, leaveRoom } from '../services/api.js';
+import { useAuthStore } from '../stores/auth.js';
 import { useGameStore } from '../stores/game.js';
 import { formatChips } from '../utils/format.js';
 
@@ -162,6 +214,7 @@ const $q = useQuasar();
 const route = useRoute();
 const router = useRouter();
 const game = useGameStore();
+const auth = useAuthStore();
 const { status } = useSocket();
 const cancelling = ref(false);
 
@@ -188,10 +241,19 @@ const betLabel = computed(() => {
 });
 
 const iWon = computed(() => game.finished?.winnerTeam === game.myTeam);
+const myResult = computed(() => game.finished?.results?.[game.myId] ?? null);
+const resultTitle = computed(() => {
+  if (game.is2v2) return iWon.value ? '¡Ganaron la partida!' : 'Ganaron ellos';
+  return iWon.value ? '¡Ganaste la partida!' : `Ganó ${opponentName.value}`;
+});
 const myChips = computed(() => game.finished?.chips?.players?.find((p) => p.userId === game.myId) ?? null);
 const reasonText = computed(() => {
   const f = game.finished;
   if (f?.endReason !== 'abandon') return '';
+  if (game.is2v2) {
+    const who = (f.abandoners?.length ? f.abandoners : [f.abandonedBy]).map((id) => (id === game.myId ? 'Vos' : game.nameOf(id)));
+    return who.length > 1 ? `Abandonaron ${who.join(' y ')}.` : `${who[0] === 'Vos' ? 'Abandonaste' : `${who[0]} abandonó`} la partida.`;
+  }
   return f.abandonedBy === game.myId ? 'Abandonaste la partida.' : `${opponentName.value} abandonó la partida.`;
 });
 const myScore = computed(() => game.finished?.score?.[game.myTeam] ?? 0);
@@ -207,9 +269,13 @@ const rematchClosed = computed(() => ['declined', 'expired', 'failed', 'started'
 const rematchText = computed(() => {
   const r = game.rematch;
   if (!r) return '';
+  const accepted = r.accepted?.length ?? 0;
+  if (game.is2v2 && (r.state === 'waiting' || r.state === 'requested')) {
+    return r.state === 'waiting' ? `Aceptaron ${Math.max(accepted, 1)} de 4. Esperando a los demás…` : `Quieren la revancha (${accepted} de 4).`;
+  }
   if (r.state === 'waiting') return `Esperando que ${opponentName.value} acepte…`;
   if (r.state === 'requested' && r.by !== game.myId) return `${opponentName.value} quiere la revancha.`;
-  if (r.state === 'declined') return r.by === game.myId ? 'Rechazaste la revancha.' : `${opponentName.value} no quiere la revancha.`;
+  if (r.state === 'declined') return r.by === game.myId ? 'Rechazaste la revancha.' : `${game.nameOf(r.by)} no quiere la revancha.`;
   if (r.state === 'expired') return 'La revancha caducó.';
   if (r.state === 'failed') return r.message || 'No se pudo armar la revancha.';
   if (r.state === 'started') return '¡Revancha! Entrando a la mesa nueva…';
@@ -255,7 +321,9 @@ function handleAction(type) {
   }
   $q.dialog({
     title: '¿Te vas al mazo?',
-    message: 'Tu rival se lleva los puntos en juego de esta mano.',
+    message: game.is2v2
+      ? 'El mazo es de la pareja: los rivales se llevan los puntos en juego de esta mano.'
+      : 'Tu rival se lleva los puntos en juego de esta mano.',
     cancel: { label: 'Seguir jugando', flat: true, noCaps: true },
     ok: { label: 'Me voy al mazo', color: 'negative', unelevated: true, noCaps: true }
   }).onOk(() => game.sendAction('GO_TO_DECK'));
@@ -265,12 +333,42 @@ function confirmAbandon() {
   const bet = game.room?.config?.bet;
   $q.dialog({
     title: '¿Abandonar la partida?',
-    message: bet
-      ? `Abandonar cuenta como derrota: ${opponentName.value} gana y perdés tus ${formatChips(bet)} fichas.`
-      : `Abandonar cuenta como derrota: ${opponentName.value} gana la partida.`,
+    message: game.is2v2
+      ? (bet
+        ? `Abandonar cuenta como derrota: tu pareja pierde y perdés tus ${formatChips(bet)} fichas (tu compañero recupera las suyas).`
+        : 'Abandonar cuenta como derrota: tu pareja pierde la partida.')
+      : (bet
+        ? `Abandonar cuenta como derrota: ${opponentName.value} gana y perdés tus ${formatChips(bet)} fichas.`
+        : `Abandonar cuenta como derrota: ${opponentName.value} gana la partida.`),
     cancel: { label: 'Seguir jugando', flat: true, noCaps: true },
     ok: { label: 'Abandonar', color: 'negative', unelevated: true, noCaps: true }
   }).onOk(() => game.abandon());
+}
+
+// 2 vs 2: asientos de la sala de espera
+const movingSeat = ref(false);
+const seatUser = (seatNo) => game.room?.seats?.find((x) => x.seat === seatNo) || null;
+async function moveTo(seatNo) {
+  movingSeat.value = true;
+  try {
+    await changeSeat(game.roomId, seatNo);
+  } catch (e) {
+    $q.notify({ type: 'negative', message: e.message });
+  } finally {
+    movingSeat.value = false;
+  }
+}
+
+async function handleLeave() {
+  cancelling.value = true;
+  try {
+    await leaveRoom(game.roomId);
+    router.push('/');
+  } catch (e) {
+    $q.notify({ type: 'negative', message: e.message });
+  } finally {
+    cancelling.value = false;
+  }
 }
 
 async function handleCancel() {
@@ -358,6 +456,50 @@ watch(() => route.params.roomId, (id) => id && game.enterRoom(id));
   font-weight: 800;
   letter-spacing: 0.2em;
 }
+
+.tr-wait4 {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  max-width: 340px;
+}
+
+.tr-wait4__team {
+  display: grid;
+  grid-template-columns: 72px 1fr 1fr;
+  align-items: center;
+  gap: 6px;
+}
+
+.tr-wait4__team-name {
+  font-weight: 700;
+  font-size: 0.85rem;
+  text-align: left;
+}
+
+.tr-wait4__seat {
+  min-height: 44px;
+  padding: 6px 8px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: rgba(0, 0, 0, 0.25);
+  color: #fff;
+  font: inherit;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tr-wait4__seat--free {
+  border-style: dashed;
+  color: #fde68a;
+  cursor: pointer;
+}
+
+.tr-wait4__seat--me { border-color: #fde047; background: rgba(253, 224, 71, 0.15); }
+.tr-wait4__seat:disabled { cursor: default; color: #fff; opacity: 1; }
 
 .tr-result { width: min(92vw, 360px); }
 

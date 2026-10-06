@@ -36,6 +36,20 @@
             />
           </div>
 
+          <div>
+            <div class="tr-private__label">Modo</div>
+            <q-btn-toggle
+              v-model="mode"
+              spread
+              no-caps
+              unelevated
+              toggle-color="primary"
+              color="grey-2"
+              text-color="dark"
+              :options="[{ label: '1 vs 1', value: '1v1' }, { label: '2 vs 2 (parejas)', value: '2v2' }]"
+            />
+          </div>
+
           <q-input
             v-model.number="bet"
             type="number"
@@ -77,7 +91,7 @@
           <div v-if="found" class="tr-private__found" role="status">
             <strong>Sala de {{ found.seats[0]?.username }}</strong>
             <span>
-              A {{ found.config.targetPoints }} · sin flor ·
+              {{ found.config.mode === '2v2' ? '2 vs 2' : '1 vs 1' }} · A {{ found.config.targetPoints }} · sin flor ·
               <template v-if="found.config.bet">{{ formatChips(found.config.bet) }} fichas por jugador</template>
               <template v-else>gratis</template>
             </span>
@@ -85,6 +99,26 @@
               Al entrar se descuentan {{ formatChips(found.config.bet) }} fichas de tu saldo.
               Si ganás te llevás {{ formatChips(found.config.bet * 2) }}.
             </span>
+          </div>
+
+          <!-- 2 vs 2: elegir asiento (compañeros enfrentados: 0 y 2 contra 1 y 3) -->
+          <div v-if="found && found.config.mode === '2v2'" class="tr-private__seats">
+            <div class="tr-private__label">Elegí tu lugar</div>
+            <div v-for="team in [0, 1]" :key="team" class="tr-private__team">
+              <span class="tr-private__team-name">Pareja {{ team === 0 ? 'A' : 'B' }}</span>
+              <q-btn
+                v-for="seatNo in [team, team + 2]"
+                :key="seatNo"
+                no-caps
+                unelevated
+                size="sm"
+                :disable="Boolean(occupant(seatNo))"
+                :color="chosenSeat === seatNo ? 'primary' : 'grey-2'"
+                :text-color="chosenSeat === seatNo ? 'white' : 'dark'"
+                :label="occupant(seatNo) || 'Libre'"
+                @click="chosenSeat = seatNo"
+              />
+            </div>
           </div>
         </q-card-section>
 
@@ -137,6 +171,7 @@ const createForm = ref(null);
 
 // Crear
 const targetPoints = ref(15);
+const mode = ref('1v1');
 const bet = ref(0);
 let uuid = crypto.randomUUID();
 
@@ -150,17 +185,24 @@ const betRules = [
   (v) => (v !== null && v !== '' && Number.isInteger(v)) || 'Escribí un número entero de fichas (0 para jugar gratis)',
   (v) => v === 0 || v >= config.value.minBet || `La apuesta mínima es de ${formatChips(config.value.minBet)} fichas`,
   (v) => v <= privateMax.value || `En salas privadas la apuesta máxima es de ${formatChips(privateMax.value)} fichas`,
-  (v) => v <= (wallet.balance ?? 0) || 'No tenés fichas suficientes'
+  (v) => v <= (wallet.balance ?? 0) || 'No tenés fichas suficientes',
+  (v) => mode.value !== '2v2' || v % 10 === 0 || 'En 2 vs 2 la apuesta tiene que ser múltiplo de 10'
 ];
 
 // Unirme
 const code = ref('');
 const found = ref(null);
+const chosenSeat = ref(null);
+const occupant = (seatNo) => found.value?.seats.find((x) => x.seat === seatNo)?.username || null;
 const normalized = computed(() => code.value.trim().toUpperCase());
 const canAffordFound = computed(() => !found.value?.config.bet || (wallet.balance ?? 0) >= found.value.config.bet);
 
 // Si cambia el código, la sala encontrada ya no corresponde
 watch(code, () => { found.value = null; });
+watch(found, (room) => {
+  // Por defecto, el primer asiento libre
+  chosenSeat.value = room?.config.mode === '2v2' ? [0, 1, 2, 3].find((n) => !occupant(n)) ?? null : null;
+});
 watch(tab, () => { found.value = null; });
 watch(() => props.modelValue, (open) => {
   if (!open) return;
@@ -173,7 +215,7 @@ async function create() {
   if (!(await createForm.value.validate())) return;
   loading.value = true;
   try {
-    const room = await createRoom({ uuid, targetPoints: targetPoints.value, bet: bet.value, isPrivate: true });
+    const room = await createRoom({ uuid, targetPoints: targetPoints.value, bet: bet.value, isPrivate: true, mode: mode.value });
     emit('update:modelValue', false);
     emit('done', room);
   } catch (e) {
@@ -199,7 +241,7 @@ async function lookup() {
 async function join() {
   loading.value = true;
   try {
-    const room = await joinRoomByCode(normalized.value);
+    const room = await joinRoomByCode(normalized.value, chosenSeat.value);
     emit('update:modelValue', false);
     emit('done', room);
   } catch (e) {
@@ -249,6 +291,25 @@ async function join() {
   background: #f0fdf4;
   border: 1px solid #bbf7d0;
   color: #14532d;
+}
+
+.tr-private__seats {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.tr-private__team {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.tr-private__team-name {
+  min-width: 64px;
+  font-size: 0.85rem;
+  font-weight: 600;
 }
 
 .tr-private__found-note {

@@ -25,6 +25,20 @@
             </button>
           </div>
 
+          <div v-if="kind === 'room'">
+            <div class="tr-create__label">Modo</div>
+            <q-btn-toggle
+              v-model="mode"
+              spread
+              no-caps
+              unelevated
+              toggle-color="primary"
+              color="grey-2"
+              text-color="dark"
+              :options="[{ label: '1 vs 1', value: '1v1' }, { label: '2 vs 2 (parejas)', value: '2v2' }]"
+            />
+          </div>
+
           <div v-if="kind === 'tournament'">
             <div class="tr-create__label">Jugadores</div>
             <q-btn-toggle
@@ -110,7 +124,7 @@ import { useWalletStore } from '../stores/wallet.js';
 import { formatChips } from '../utils/format.js';
 
 const KINDS = [
-  { value: 'room', label: 'Mesa', icon: 'style', hint: '1 contra 1' },
+  { value: 'room', label: 'Mesa', icon: 'style', hint: '1 vs 1 o 2 vs 2' },
   { value: 'tournament', label: 'Torneo', icon: 'military_tech', hint: '4 u 8 jugadores' }
 ];
 
@@ -125,6 +139,7 @@ const { config } = useGameConfig();
 const formRef = ref(null);
 const kind = ref('room');
 const size = ref(4);
+const mode = ref('1v1'); // solo mesas: los torneos son 1 vs 1
 const targetPoints = ref(15);
 const amount = ref(0); // 0 = gratis
 const loading = ref(false);
@@ -148,7 +163,9 @@ const amountHint = computed(() => {
   if (!amount.value) return kind.value === 'tournament' ? 'Torneo gratis: no se juegan fichas.' : 'Mesa gratis: no se juegan fichas.';
   return kind.value === 'tournament'
     ? `Tenés ${formatChips(wallet.balance ?? 0)} fichas. La inscripción se cobra al crear el torneo.`
-    : `Tenés ${formatChips(wallet.balance ?? 0)} fichas. El ganador se lleva ${formatChips(prize.value)}.`;
+    : mode.value === '2v2'
+      ? `Tenés ${formatChips(wallet.balance ?? 0)} fichas. Cada uno de la pareja ganadora se lleva ${formatChips(prize.value)}.`
+      : `Tenés ${formatChips(wallet.balance ?? 0)} fichas. El ganador se lleva ${formatChips(prize.value)}.`;
 });
 
 // Un uuid por intento de creación: reintentar el mismo envío no crea una partida duplicada
@@ -158,7 +175,7 @@ watch(() => props.modelValue, (open) => {
   // Si el saldo bajó, no se deja seleccionada una opción que ya no se puede pagar
   if (amount.value > (wallet.balance ?? 0)) amount.value = 0;
 });
-watch(kind, () => { uuid = crypto.randomUUID(); });
+watch([kind, mode], () => { uuid = crypto.randomUUID(); });
 
 async function submit() {
   if (!(await formRef.value.validate())) return;
@@ -167,7 +184,7 @@ async function submit() {
   try {
     const item = kind.value === 'tournament'
       ? await createTournament({ uuid, size: size.value, targetPoints: targetPoints.value, buyIn: chips })
-      : await createRoom({ uuid, targetPoints: targetPoints.value, bet: chips });
+      : await createRoom({ uuid, targetPoints: targetPoints.value, bet: chips, mode: mode.value });
     emit('update:modelValue', false);
     emit('created', { kind: kind.value, item });
   } catch (e) {

@@ -69,6 +69,7 @@ export function tableState(page) {
       finished: Boolean(g.finished),
       phase: v?.phase ?? null,
       me: v?.me?.id ?? null,
+      team: v?.me?.team ?? null,
       opponent: v?.players?.find((p) => p.id !== v?.me?.id)?.id ?? null,
       actions: (v?.availableActions ?? []).map((a) => a.type ?? a)
     };

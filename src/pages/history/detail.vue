@@ -8,10 +8,10 @@
           <span class="tr-detail-head__result" :class="`tr-detail-head__result--${match.result}`">
             {{ RESULT_LABELS[match.result] }}
           </span>
-          <h1>vs {{ match.opponent?.username }}</h1>
+          <h1>{{ opponentsLabel(match) }}</h1>
           <p class="tr-num tr-detail-head__score">{{ match.myScore }} – {{ match.opponentScore }}</p>
           <p class="tr-detail-head__meta">
-            A {{ match.config.targetPoints }} puntos ·
+            <template v-if="match.config.mode === '2v2'">2 vs 2 · </template>A {{ match.config.targetPoints }} puntos ·
             {{ match.config.bet ? `${formatChips(match.config.bet)} fichas` : 'gratis' }} ·
             {{ formatDateTime(match.endedAt) }}
           </p>
@@ -40,10 +40,11 @@
                     <PlayingCard v-for="card in hand.myCards" :key="card" :card-id="card" size="sm" />
                   </div>
                 </div>
-                <div v-if="opponentPlays(hand).length" class="tr-hand-body__row">
-                  <span class="tr-hand-body__label">Jugó {{ match.opponent?.username }}</span>
+                <!-- De los demás solo se ven las cartas que jugaron (también del compañero) -->
+                <div v-for="other in otherPlays(hand)" :key="other.id" class="tr-hand-body__row">
+                  <span class="tr-hand-body__label">Jugó {{ other.name }}</span>
                   <div class="tr-hand-body__cards">
-                    <PlayingCard v-for="card in opponentPlays(hand)" :key="card" :card-id="card" size="sm" />
+                    <PlayingCard v-for="card in other.cards" :key="card" :card-id="card" size="sm" />
                   </div>
                 </div>
                 <ol v-if="handEvents(hand).length" class="tr-hand-body__events">
@@ -67,7 +68,8 @@ import PlayingCard from '../../components/game/PlayingCard.vue';
 import { fetchMatch } from '../../services/api.js';
 import { formatChips, formatDateTime, formatSignedChips } from '../../utils/format.js';
 import { describeEvent } from '../../utils/gameText.js';
-import { RESULT_LABELS, resultDetail } from '../../utils/matchText.js';
+import { useAuthStore } from '../../stores/auth.js';
+import { RESULT_LABELS, opponentsLabel, resultDetail } from '../../utils/matchText.js';
 
 const HAND_REASONS = {
   bazas: 'por bazas',
@@ -81,7 +83,10 @@ const route = useRoute();
 const match = ref(null);
 const loading = ref(true);
 
-const myId = () => match.value.players.find((p) => p.team === match.value.myTeam)?.id;
+const auth = useAuthStore();
+// El usuario de la sesión (en 2 vs 2, el primero de mi equipo puede ser mi compañero)
+const myId = () => auth.user?.id;
+const is2v2 = () => match.value.config.mode === '2v2';
 
 function nameOf(playerId) {
   if (playerId === myId()) return 'Vos';
@@ -89,13 +94,16 @@ function nameOf(playerId) {
 }
 
 function teamName(team) {
-  return team === match.value.myTeam ? 'Vos' : match.value.opponent?.username || 'Rival';
+  if (team === match.value.myTeam) return 'Vos';
+  return is2v2() ? 'Ellos' : match.value.opponent?.username || 'Rival';
 }
 
 function handTitle(hand) {
   const r = hand.result;
   if (!r) return `Mano ${hand.handNumber} · terminó la partida`;
-  const who = r.winnerTeam === match.value.myTeam ? 'Ganaste' : `Ganó ${match.value.opponent?.username}`;
+  const who = r.winnerTeam === match.value.myTeam
+    ? (is2v2() ? 'Ganaron' : 'Ganaste')
+    : (is2v2() ? 'Ganaron ellos' : `Ganó ${match.value.opponent?.username}`);
   return `Mano ${hand.handNumber} · ${who} +${r.points}`;
 }
 
@@ -106,8 +114,11 @@ function handCaption(hand) {
   return `${mano}${reason}${score}`;
 }
 
-function opponentPlays(hand) {
-  return hand.plays.filter((p) => p.playerId !== myId()).map((p) => p.cardId);
+function otherPlays(hand) {
+  return match.value.players
+    .filter((p) => p.id !== myId())
+    .map((p) => ({ id: p.id, name: p.username, cards: hand.plays.filter((x) => x.playerId === p.id).map((x) => x.cardId) }))
+    .filter((p) => p.cards.length);
 }
 
 function handEvents(hand) {

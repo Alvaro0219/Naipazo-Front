@@ -6,6 +6,18 @@
     </header>
 
     <LoadingState :loading="loading" :empty="false">
+      <q-btn-toggle
+        v-model="statsMode"
+        no-caps
+        unelevated
+        rounded
+        toggle-color="primary"
+        color="white"
+        text-color="dark"
+        class="q-mb-sm"
+        aria-label="Modo"
+        :options="[{ label: '1 vs 1', value: '1v1' }, { label: '2 vs 2', value: '2v2' }]"
+      />
       <section class="tr-stats" aria-label="Estadísticas">
         <div v-for="stat in stats" :key="stat.label" class="tr-stat">
           <span class="tr-stat__value tr-num">{{ stat.value }}</span>
@@ -87,8 +99,10 @@ const memberSince = computed(() => (user.value?.createdAt
   ? new Intl.DateTimeFormat('es-AR', { month: 'long', year: 'numeric' }).format(new Date(user.value.createdAt))
   : ''));
 
+// Estadísticas por modo (las de torneos son de 1 vs 1). Las salas privadas no suman.
+const statsMode = ref('1v1');
 const stats = computed(() => {
-  const s = user.value?.stats || {};
+  const s = (statsMode.value === '2v2' ? user.value?.statsTwoVsTwo : user.value?.stats) || {};
   const rate = s.played ? Math.round((s.won / s.played) * 100) : 0;
   return [
     { label: 'Jugadas', value: s.played ?? 0 },
@@ -97,8 +111,9 @@ const stats = computed(() => {
     { label: '% de victorias', value: `${rate}%` },
     { label: 'Abandonos', value: s.abandoned ?? 0 },
     { label: 'Fichas ganadas', value: formatChips(s.chipsWon ?? 0) },
-    { label: 'Torneos jugados', value: s.tournamentsPlayed ?? 0 },
-    { label: 'Torneos ganados', value: s.tournamentsWon ?? 0 }
+    ...(statsMode.value === '1v1'
+      ? [{ label: 'Torneos jugados', value: s.tournamentsPlayed ?? 0 }, { label: 'Torneos ganados', value: s.tournamentsWon ?? 0 }]
+      : [])
   ];
 });
 

@@ -85,5 +85,10 @@ el corte de red se simula con `setOffline` + `window.__socketDebug.socket` (solo
   `ChipFlowsCard` en Administración. **Vencimientos (P6):** la mesa y el torneo muestran `cancelReason: 'expired'`.
 - **Diagnóstico (P3):** en desarrollo, `window.__socketDebug` guarda los sockets creados, cada `room:join` con su
   origen y el socket (lo usan los e2e). El store `wallet` guarda `lastSource` e ignora saldos no numéricos.
+- **2 vs 2 (M8):** `game.is2v2`, `game.partner`, `game.rivals`, `game.signs` / `lastSign` (evento `game:sign`) y
+  `game.sendSign`. La mesa usa `components/game/TableBoard2v2.vue` (vos abajo, compañero arriba, rivales a los costados
+  por posición relativa `(asiento - el mío + 4) % 4`, baza en cruz); la sala de espera 2 vs 2 está en `pages/table.vue`
+  (asientos por pareja, `changeSeat`, `leaveRoom`). Lobby con filtro de modo; ranking y perfil con selector de modo.
+  End-to-end con 4 contextos: `e2e/twovstwo.spec.js`.
 - Git: siempre en `main`, sin ramas nuevas; no hacer push sin confirmarlo.
 - Despliegue en Cloudflare Pages; `public/_redirects` resuelve el ruteo SPA.

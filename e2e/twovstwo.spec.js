@@ -77,5 +77,19 @@ test('2 vs 2 con apuesta: asientos, seña al compañero, reconexión, partida co
   const after = await Promise.all(sessions.map((s) => api(request, s, 'GET', '/wallet').then((w) => w.balance)));
   expect(after).toEqual([1150, 800, 1150, 900]);
 
+  // Historial, ranking y perfil por modo
+  await p0.page.goto('/historial');
+  const first = p0.page.locator('.tr-match').first();
+  await expect(first).toContainText('2 vs 2');
+  await expect(first).toContainText(`con ${sessions[2].user.username} vs`);
+  await p3.page.goto('/historial');
+  await expect(p3.page.locator('.tr-match').first()).toContainText('Sin resultado');
+  await p0.page.goto('/ranking');
+  await p0.page.locator('.tr-ranking-filters button', { hasText: '2 vs 2' }).click();
+  await expect(p0.page.locator('tbody tr', { hasText: sessions[0].user.username })).toBeVisible();
+  await p0.page.goto('/perfil');
+  await p0.page.locator('button', { hasText: '2 vs 2' }).click();
+  await expect(p0.page.locator('.tr-stat', { hasText: 'Jugadas' })).toContainText('2');
+
   for (const p of [p0, p1, p2, p3]) await p.context.close();
 });

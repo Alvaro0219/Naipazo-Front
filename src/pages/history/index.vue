@@ -30,9 +30,9 @@
                 {{ RESULT_LABELS[row.result] }}
               </span>
               <div class="tr-match__main">
-                <strong>vs {{ row.opponent?.username || '—' }}</strong>
+                <strong>{{ opponentsLabel(row) }}</strong>
                 <span class="tr-match__meta">
-                  <template v-if="row.tournamentId">Torneo · </template>A {{ row.config.targetPoints }} · {{ formatDateTime(row.endedAt) }}
+                  <template v-if="row.tournamentId">Torneo · </template><template v-if="row.config.mode === '2v2'">2 vs 2 · </template><template v-if="row.config.isPrivate">Privada · </template>A {{ row.config.targetPoints }} · {{ formatDateTime(row.endedAt) }}
                   <template v-if="resultDetail(row)"> · {{ resultDetail(row) }}</template>
                 </span>
               </div>
@@ -62,7 +62,7 @@ import LoadingState from '../../components/LoadingState.vue';
 import { usePaginatedList } from '../../composables/usePaginatedList.js';
 import { fetchMatches } from '../../services/api.js';
 import { formatDateTime, formatSignedChips } from '../../utils/format.js';
-import { RESULT_LABELS, resultDetail } from '../../utils/matchText.js';
+import { RESULT_LABELS, opponentsLabel, resultDetail } from '../../utils/matchText.js';
 
 const columns = [{ name: 'id', field: 'id', label: 'Partida' }];
 
@@ -105,6 +105,7 @@ onMounted(reload);
 .tr-match__result--won { background: #dcfce7; color: #166534; }
 .tr-match__result--lost { background: #fee2e2; color: #991b1b; }
 .tr-match__result--cancelled { background: #f1f5f9; color: #475569; }
+.tr-match__result--no-result { background: #fef9c3; color: #713f12; }
 
 .tr-match__main {
   flex: 1;

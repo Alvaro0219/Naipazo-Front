@@ -2,7 +2,7 @@
   <div class="tr-page-shell">
     <header class="tr-page-header">
       <h1>Ranking</h1>
-      <p>Los que más ganan en la mesa.</p>
+      <p>Los que más ganan en la mesa. Las salas privadas no cuentan.</p>
     </header>
 
     <div class="tr-ranking-filters">
@@ -15,6 +15,17 @@
         color="white"
         text-color="dark"
         :options="[{ label: 'Partidas ganadas', value: 'won' }, { label: 'Fichas ganadas', value: 'chips' }]"
+      />
+      <q-btn-toggle
+        v-model="filters.mode"
+        no-caps
+        unelevated
+        rounded
+        toggle-color="primary"
+        color="white"
+        text-color="dark"
+        aria-label="Modo"
+        :options="[{ label: '1 vs 1', value: '1v1' }, { label: '2 vs 2', value: '2v2' }]"
       />
       <q-select
         v-model="filters.period"
@@ -80,7 +91,8 @@ const PERIODS = [
 
 const $q = useQuasar();
 const auth = useAuthStore();
-const filters = reactive({ by: 'won', period: 'all' });
+// Tablas separadas por modo; las salas privadas no cuentan en ninguna
+const filters = reactive({ by: 'won', period: 'all', mode: '1v1' });
 
 const { rows, loading, firstLoad, pagination, onRequest, reload } = usePaginatedList({
   fetchFn: fetchRanking,

@@ -35,11 +35,11 @@ const imageUrl = computed(() => (props.cardId ? cardImageUrl(props.cardId) : nul
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  /* Borde propio de carta: blanco, filete fino y un margen para que el dibujo no toque el canto */
-  padding: 4%;
+  padding: 0;
   overflow: hidden;
-  border-radius: 8% / 5.5%;
-  border: 1px solid #c9c2a6;
+  /* Mismo redondeo que las esquinas del dibujo (12 px sobre 208 × 319) */
+  border-radius: 5.8% / 3.8%;
+  border: 0;
   background: #fff;
   box-shadow: 0 3px 8px rgba(2, 6, 23, 0.25);
   font: inherit;
@@ -47,13 +47,13 @@ const imageUrl = computed(() => (props.cardId ? cardImageUrl(props.cardId) : nul
   transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
 }
 
-/* Alto = interior (ancho − margen − filete) con la proporción del dibujo (208 × 319) + margen y filete */
-.tr-card--sm { width: 44px; height: 65px; }
-.tr-card--md { width: 60px; height: 88px; }
-.tr-card--lg { width: 78px; height: 115px; }
+/* Proporción del dibujo: 208 × 319 */
+.tr-card--sm { width: 44px; height: 67px; }
+.tr-card--md { width: 60px; height: 92px; }
+.tr-card--lg { width: 78px; height: 120px; }
 
 .tr-card--back {
-  padding: 0;
+  border-radius: 9px;
   border: 2px solid #ca8a04;
   background:
     repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.08) 0 4px, transparent 4px 8px),
@@ -73,14 +73,24 @@ const imageUrl = computed(() => (props.cardId ? cardImageUrl(props.cardId) : nul
 
 .tr-card--dim { opacity: 0.55; }
 
-/* La imagen va entera; solo se le recorta su contorno negro de 1 px (esquinas de 12 px sobre 208 × 319) */
+/* El dibujo ocupa toda la carta; se agranda apenas (1 %) para que su contorno de 1 px quede afuera */
 .tr-card__img {
   display: block;
-  width: 100%;
-  height: 100%;
+  width: 102%;
+  height: 101.5%;
+  flex-shrink: 0;
   object-fit: fill;
-  clip-path: inset(0.7% round 5.8% / 3.8%);
   pointer-events: none;
   user-select: none;
+}
+
+/* Filete fino por encima del dibujo, siguiendo el canto: tapa las imperfecciones del borde de la imagen */
+.tr-card:not(.tr-card--back)::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: 1px solid rgba(60, 50, 30, 0.45);
+  border-radius: inherit;
+  pointer-events: none;
 }
 </style>

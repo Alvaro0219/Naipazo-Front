@@ -45,6 +45,16 @@
       </p>
     </section>
 
+    <section class="tr-section-card">
+      <h2>5. Créditos</h2>
+      <p>
+        Las cartas son la baraja española de Germarquezm y Basquetteur, publicada en
+        <a href="https://commons.wikimedia.org/wiki/File:Baraja_espa%C3%B1ola_completa.png" target="_blank" rel="noopener">Wikimedia Commons</a>
+        bajo la licencia
+        <a href="https://creativecommons.org/licenses/by-sa/3.0/deed.es" target="_blank" rel="noopener">Creative Commons Atribución-CompartirIgual 3.0</a>.
+      </p>
+    </section>
+
     <q-btn flat no-caps color="primary" icon="arrow_back" label="Volver" class="self-start" @click="goBack" />
   </div>
 </template>

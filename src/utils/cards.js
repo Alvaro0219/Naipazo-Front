@@ -7,6 +7,12 @@ export function parseCardId(cardId) {
   return { number: Number(number), suit };
 }
 
+/** Imagen de la carta (public/cartas/{número}-{palo}.png, con el mismo id que manda el servidor). */
+export function cardImageUrl(cardId) {
+  const { number, suit } = parseCardId(cardId);
+  return `${import.meta.env.BASE_URL}cartas/${number}-${suit}.png`;
+}
+
 export function cardLabel(cardId) {
   const { number, suit } = parseCardId(cardId);
   return `${number} de ${SUIT_LABELS[suit] || suit}`;

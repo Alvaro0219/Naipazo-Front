@@ -1,7 +1,10 @@
 // EXACTITUD_DEL_JUEGO.md, sección 8: la mesa muestra exactamente lo que manda el servidor.
+import { existsSync, readdirSync } from 'node:fs';
+import { resolve } from 'node:path';
+// Las rutas de archivo salen de la raíz del proyecto (vitest corre desde ahí)
 import { mount } from '@vue/test-utils';
 import { describe, expect, it } from 'vitest';
-import { ACTION_LABELS, cardLabel, parseCardId } from '../../../utils/cards.js';
+import { ACTION_LABELS, cardImageUrl, cardLabel, parseCardId } from '../../../utils/cards.js';
 import ActionBar from '../ActionBar.vue';
 import PlayingCard from '../PlayingCard.vue';
 import ScoreBoard from '../ScoreBoard.vue';
@@ -24,8 +27,10 @@ const QBtn = {
 };
 
 describe('F-01 / F-07: las 40 cartas', () => {
-  it('son 40 ids distintos', () => {
+  it('son 40 ids distintos y hay exactamente una imagen por carta (más el dorso)', () => {
     expect(new Set(DECK).size).toBe(40);
+    const files = readdirSync(resolve('public/cartas')).filter((x) => x.endsWith('.png'));
+    expect(files.sort()).toEqual([...DECK.map((c) => `${c}.png`), 'dorso.png'].sort());
   });
 
   it.each(DECK)('%s se dibuja con su número y su palo, y se nombra bien', (cardId) => {
@@ -34,16 +39,17 @@ describe('F-01 / F-07: las 40 cartas', () => {
     expect(cardLabel(cardId)).toBe(`${number} de ${suit}`);
 
     const w = mount(PlayingCard, { props: { cardId } });
-    const nums = w.findAll('.tr-card__num');
-    expect(nums.map((n) => n.text())).toEqual([number, number]);
-    for (const n of nums) expect(n.classes()).toContain(`tr-suit--${suit}`);
-    expect(w.find('svg.tr-card__suit').classes()).toContain(`tr-suit--${suit}`);
+    // La imagen es la de esa carta (mismo id que el servidor) y el archivo existe en public/cartas
+    const src = w.find('img.tr-card__img').attributes('src');
+    expect(src).toBe(`/cartas/${cardId}.png`);
+    expect(cardImageUrl(cardId)).toBe(src);
+    expect(existsSync(resolve('public', `.${src}`))).toBe(true);
     expect(w.attributes('aria-label')).toBe(`${number} de ${suit}`);
   });
 
   it('boca abajo no muestra número ni palo', () => {
     const w = mount(PlayingCard, { props: { cardId: null } });
-    expect(w.find('.tr-card__num').exists()).toBe(false);
+    expect(w.find('img').exists()).toBe(false);
     expect(w.attributes('aria-label')).toBe('Carta boca abajo');
   });
 });

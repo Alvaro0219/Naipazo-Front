@@ -79,6 +79,7 @@
       </q-table>
     </LoadingState>
 
+    <IntegrityCard />
     <ChipFlowsCard />
 
     <q-dialog v-model="adjust.open">
@@ -118,6 +119,7 @@
 import { computed, onMounted, reactive, ref } from 'vue';
 import { useQuasar } from 'quasar';
 import ChipFlowsCard from '../../components/ChipFlowsCard.vue';
+import IntegrityCard from '../../components/IntegrityCard.vue';
 import LoadingState from '../../components/LoadingState.vue';
 import { usePaginatedList } from '../../composables/usePaginatedList.js';
 import { adjustUserChips, fetchAdminUsers, setUserStatus } from '../../services/api.js';

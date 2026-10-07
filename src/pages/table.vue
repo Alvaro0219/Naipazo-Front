@@ -154,6 +154,20 @@
       </div>
     </main>
 
+    <!-- Partida suspendida por una verificación de integridad: se devolvieron las apuestas -->
+    <q-dialog :model-value="Boolean(game.frozen)" persistent>
+      <q-card class="tr-result">
+        <q-card-section class="tr-result__body">
+          <q-icon name="pause_circle" size="56px" color="grey-6" />
+          <h2>Partida suspendida</h2>
+          <p class="tr-result__reason" role="alert">{{ game.frozen?.message }}</p>
+        </q-card-section>
+        <q-card-actions align="center">
+          <q-btn color="primary" unelevated no-caps label="Volver al lobby" @click="leaveAfterMatch" />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
+
     <q-dialog :model-value="Boolean(game.finished)" persistent>
       <q-card class="tr-result">
         <q-card-section class="tr-result__body">

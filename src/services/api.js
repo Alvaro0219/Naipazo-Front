@@ -298,6 +298,22 @@ export async function fetchChipFlows(params) {
   return unwrap(data, 'No se pudo cargar el reporte', status).items;
 }
 
+/** EXACTITUD 10.4: incidentes de integridad (congelamientos, auditorías, conciliación) */
+export async function fetchIntegrity() {
+  const { data, status } = await api.get('/admin/integrity');
+  return unwrap(data, 'No se pudo cargar la integridad', status);
+}
+
+export async function reconcileChips() {
+  const { data, status } = await api.post('/admin/integrity/reconcile');
+  return unwrap(data, 'No se pudo conciliar', status);
+}
+
+export async function resolveIncident(id) {
+  const { data, status } = await api.post(`/admin/incidents/${id}/resolve`);
+  return unwrap(data, 'No se pudo marcar el incidente', status);
+}
+
 export async function adjustUserChips(userId, payload) {
   const { data, status } = await api.post(`/admin/users/${userId}/adjust`, payload);
   return unwrap(data, 'No se pudo ajustar el saldo', status);

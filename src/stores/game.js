@@ -26,6 +26,7 @@ export const useGameStore = defineStore('game', {
     log: [], // historial de la mano: se arma pero hoy no se muestra en la mesa (decisión de producto)
     announcement: null,
     finished: null,
+    frozen: null, // { matchId, message }: el servidor suspendió la partida por una verificación de integridad
     rematch: null, // { state: 'waiting' | 'requested' | 'declined' | 'expired' | 'started' | 'failed', by?, roomId?, message? }
     replaced: false,
     sending: false,
@@ -92,6 +93,7 @@ export const useGameStore = defineStore('game', {
       socket.on('game:event', (event) => this.onEvent(event));
       socket.on('game:finished', (summary) => { if (summary.matchId === this.room?.matchId) this.finished = summary; });
       socket.on('game:error', (err) => this.onError(err));
+      socket.on('game:frozen', (data) => { if (data.matchId === this.room?.matchId || data.matchId === this.view?.matchId) this.frozen = data; });
       socket.on('game:rematch', (data) => this.onRematch(data));
       socket.on('game:sign', (data) => this.onSign(data));
       // 2 vs 2: no se pudo arrancar (por ejemplo, a alguien ya no le alcanzan las fichas)

@@ -46,8 +46,14 @@
 
       <!-- Sala en espera 2 vs 2: asientos por pareja (los libres se tocan para cambiarse) -->
       <div v-else-if="game.room?.status === 'waiting' && game.is2v2" class="tr-table__center">
-        <h2>Esperando jugadores · {{ game.room.seats.length }} de 4</h2>
-        <p>Compañeros enfrentados: la pareja A juega contra la pareja B. Tocá un lugar libre para cambiarte.</p>
+        <template v-if="game.room.seats.length < 4">
+          <h2>Esperando jugadores · {{ game.room.seats.length }} de 4</h2>
+          <p>Compañeros enfrentados: la pareja A juega contra la pareja B. Tocá un lugar libre para cambiarte.</p>
+        </template>
+        <template v-else>
+          <h2>¡Mesa completa! Confirmen para empezar · {{ readyCount }} de 4</h2>
+          <p>La partida arranca cuando los cuatro tocan "Estoy listo". Recién ahí se descuentan las fichas.</p>
+        </template>
         <div class="tr-wait4">
           <div v-for="team in [0, 1]" :key="team" class="tr-wait4__team">
             <span class="tr-wait4__team-name">Pareja {{ team === 0 ? 'A' : 'B' }}</span>
@@ -61,6 +67,7 @@
               @click="moveTo(seatNo)"
             >
               {{ seatUser(seatNo) ? (seatUser(seatNo).userId === auth.user?.id ? 'Vos' : seatUser(seatNo).username) : 'Libre' }}
+              <q-icon v-if="seatUser(seatNo) && isReady(seatUser(seatNo).userId)" name="check_circle" color="positive" size="16px" aria-label="Listo" />
             </button>
           </div>
         </div>
@@ -73,6 +80,18 @@
           :icon="copied ? 'check' : 'content_copy'"
           :label="copied ? 'Código copiado' : 'Copiar código'"
           @click="copyCode"
+        />
+        <q-btn
+          v-if="game.room.seats.length === 4"
+          color="accent"
+          text-color="dark"
+          unelevated
+          no-caps
+          :icon="isReady(auth.user?.id) ? 'check' : 'thumb_up'"
+          :label="isReady(auth.user?.id) ? 'Listo · esperando a los demás' : 'Estoy listo'"
+          :disable="isReady(auth.user?.id)"
+          :loading="confirming"
+          @click="handleReady"
         />
         <q-btn outline color="white" no-caps label="Salir de la mesa" :loading="cancelling" @click="handleLeave" />
       </div>
@@ -141,7 +160,7 @@
           <q-icon :name="iWon ? 'emoji_events' : 'sentiment_dissatisfied'" size="56px" :color="iWon ? 'accent' : 'grey-6'" />
           <h2>{{ resultTitle }}</h2>
           <p v-if="reasonText" class="tr-result__reason">{{ reasonText }}</p>
-          <p v-if="myResult === 'no-result'" class="tr-result__reason">Abandonó tu compañero: para vos la partida queda sin resultado y recuperás tu apuesta.</p>
+          <p v-if="myResult === 'loss' && game.finished?.endReason === 'abandon'" class="tr-result__reason">Abandonó tu compañero: pierden los dos.</p>
           <p v-if="game.finished" class="tr-num">
             {{ game.is2v2 ? 'Nosotros' : 'Vos' }} {{ myScore }} – {{ theirScore }} {{ game.is2v2 ? 'Ellos' : opponentName }}
           </p>
@@ -205,7 +224,7 @@ import ScoreBoard from '../components/game/ScoreBoard.vue';
 import TableBoard from '../components/game/TableBoard.vue';
 import TableBoard2v2 from '../components/game/TableBoard2v2.vue';
 import { useSocket } from '../composables/useSocket.js';
-import { cancelRoom, changeSeat, fetchTournament, leaveRoom } from '../services/api.js';
+import { cancelRoom, changeSeat, confirmReady, fetchTournament, leaveRoom } from '../services/api.js';
 import { useAuthStore } from '../stores/auth.js';
 import { useGameStore } from '../stores/game.js';
 import { formatChips } from '../utils/format.js';
@@ -335,7 +354,7 @@ function confirmAbandon() {
     title: '¿Abandonar la partida?',
     message: game.is2v2
       ? (bet
-        ? `Abandonar cuenta como derrota: tu pareja pierde y perdés tus ${formatChips(bet)} fichas (tu compañero recupera las suyas).`
+        ? `Abandonar cuenta como derrota para los dos: tu pareja pierde y ambos pierden sus ${formatChips(bet)} fichas.`
         : 'Abandonar cuenta como derrota: tu pareja pierde la partida.')
       : (bet
         ? `Abandonar cuenta como derrota: ${opponentName.value} gana y perdés tus ${formatChips(bet)} fichas.`
@@ -356,6 +375,20 @@ async function moveTo(seatNo) {
     $q.notify({ type: 'negative', message: e.message });
   } finally {
     movingSeat.value = false;
+  }
+}
+
+const readyCount = computed(() => game.room?.readyIds?.length ?? 0);
+const isReady = (userId) => Boolean(game.room?.readyIds?.includes(userId));
+const confirming = ref(false);
+async function handleReady() {
+  confirming.value = true;
+  try {
+    await confirmReady(game.roomId);
+  } catch (e) {
+    $q.notify({ type: 'negative', message: e.message });
+  } finally {
+    confirming.value = false;
   }
 }
 

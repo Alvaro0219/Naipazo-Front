@@ -94,6 +94,8 @@ export const useGameStore = defineStore('game', {
       socket.on('game:error', (err) => this.onError(err));
       socket.on('game:rematch', (data) => this.onRematch(data));
       socket.on('game:sign', (data) => this.onSign(data));
+      // 2 vs 2: no se pudo arrancar (por ejemplo, a alguien ya no le alcanzan las fichas)
+      socket.on('room:error', (data) => { if (data.roomId === this.roomId) Notify.create({ type: 'negative', message: data.message }); });
       // Desconexiones del rival: el servidor reenvía game:state con `disconnected`, que es lo que se muestra
     },
     onRoomUpdate(room) {

@@ -195,6 +195,12 @@ export async function changeSeat(roomId, seat) {
   return unwrap(data, 'No se pudo cambiar de asiento', status).room;
 }
 
+/** 2 vs 2: con los 4 lugares ocupados, confirmar "Estoy listo" (arranca cuando confirman los 4) */
+export async function confirmReady(roomId) {
+  const { data, status } = await api.post(`/rooms/${roomId}/ready`);
+  return unwrap(data, 'No se pudo confirmar', status).room;
+}
+
 /** Salir de una sala en espera (si sale el anfitrión, pasa al siguiente) */
 export async function leaveRoom(roomId) {
   const { data, status } = await api.post(`/rooms/${roomId}/leave`);

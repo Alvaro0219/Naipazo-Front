@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { expect, test } from '@playwright/test';
-import { api, openAs, playUntilFinished, registerUser, tableState } from './helpers.js';
+import { api, openAs, playUntilFinished, registerUser, step, tableState } from './helpers.js';
 
 test('2 vs 2 con apuesta: asientos, seña al compañero, reconexión, partida completa y revancha de 4', async ({ browser, request }) => {
   test.setTimeout(6 * 60 * 1000);
@@ -33,6 +33,12 @@ test('2 vs 2 con apuesta: asientos, seña al compañero, reconexión, partida co
   // El cuarto entra por la API (asiento 1) y arranca la partida para los cuatro
   await api(request, sessions[3], 'POST', `/rooms/${room.id}/join`, { seat: 1 });
   await p3.page.goto(`/mesa/${room.id}`);
+  // Mesa completa: no arranca hasta que confirman los cuatro
+  await expect(p0.page.getByText(/Mesa completa! Confirmen para empezar · 0 de 4/)).toBeVisible();
+  for (const p of [p0, p1, p2]) await p.page.getByRole('button', { name: 'Estoy listo' }).click();
+  await expect(p3.page.getByText(/Confirmen para empezar · 3 de 4/)).toBeVisible();
+  await expect(p0.page.locator('.tr-b4')).toHaveCount(0);
+  await p3.page.getByRole('button', { name: 'Estoy listo' }).click();
   for (const p of [p0, p1, p2, p3]) await expect(p.page.locator('.tr-b4')).toBeVisible({ timeout: 20000 });
 
   // Equipos: 0 y 2 (p0, p2) contra 1 y 3 (p3, p1). Cada uno ve a su compañero arriba
@@ -55,6 +61,13 @@ test('2 vs 2 con apuesta: asientos, seña al compañero, reconexión, partida co
   await expect(p0.page.getByText(/Esperando reconexión/)).toHaveCount(0, { timeout: 30000 });
   await expect.poll(async () => (await tableState(p3.page))?.phase).toBe('playing');
 
+  // Se juegan unas cartas: cada una queda delante de quien la jugó (captura de referencia de la mesa)
+  for (let i = 0; i < 60 && (await p0.page.locator('.tr-b4__felt .tr-card').count()) < 6; i++) {
+    for (const p of [p0, p1, p2, p3]) await step(p.page, { lose: false }).catch(() => false);
+    await p0.page.waitForTimeout(200);
+  }
+  await p0.page.screenshot({ path: 'test-results/mesa-2v2.png' });
+
   // Partida completa: la pareja B se va al mazo cada vez que puede
   const players = [p0, p1, p2, p3].map((p) => ({ page: p.page, lose: (s) => s.team === 1 }));
   await playUntilFinished(players, { timeoutMs: 240000 });
@@ -70,12 +83,12 @@ test('2 vs 2 con apuesta: asientos, seña al compañero, reconexión, partida co
   for (const p of [p0, p1, p2, p3]) await expect(p.page).not.toHaveURL(new RegExp(`/mesa/${room.id}$`), { timeout: 20000 });
   await expect(p0.page.locator('.tr-b4')).toBeVisible({ timeout: 20000 });
 
-  // Cierre: abandona p1 (pareja B). Su compañero p3 recupera su apuesta; cada rival cobra 150
+  // Cierre: abandona p1 (pareja B). Pierden los dos de la pareja B; cada rival cobra 200
   await p1.page.getByRole('button', { name: 'Abandonar la partida' }).click();
   await p1.page.locator('.q-dialog').getByRole('button', { name: 'Abandonar' }).click();
-  await expect(p3.page.locator('.tr-result')).toContainText('sin resultado');
+  await expect(p3.page.locator('.tr-result')).toContainText('pierden los dos');
   const after = await Promise.all(sessions.map((s) => api(request, s, 'GET', '/wallet').then((w) => w.balance)));
-  expect(after).toEqual([1150, 800, 1150, 900]);
+  expect(after).toEqual([1200, 800, 1200, 800]);
 
   // Historial, ranking y perfil por modo
   await p0.page.goto('/historial');
@@ -83,7 +96,7 @@ test('2 vs 2 con apuesta: asientos, seña al compañero, reconexión, partida co
   await expect(first).toContainText('2 vs 2');
   await expect(first).toContainText(`con ${sessions[2].user.username} vs`);
   await p3.page.goto('/historial');
-  await expect(p3.page.locator('.tr-match').first()).toContainText('Sin resultado');
+  await expect(p3.page.locator('.tr-match').first()).toContainText('Abandonó tu compañero');
   await p0.page.goto('/ranking');
   await p0.page.locator('.tr-ranking-filters button', { hasText: '2 vs 2' }).click();
   await expect(p0.page.locator('tbody tr', { hasText: sessions[0].user.username })).toBeVisible();

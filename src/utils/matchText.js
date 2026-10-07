@@ -21,7 +21,8 @@ export function resultDetail(match) {
   if (match.result === 'no-result') return 'Abandonó tu compañero: recuperaste tu apuesta.';
   if (match.endReason === 'abandon') {
     if (match.abandonedByMe) return 'Abandonaste la partida.';
-    return match.config?.mode === '2v2' ? 'Abandonaron los rivales.' : `${match.opponent?.username || 'Tu rival'} abandonó la partida.`;
+    if (match.config?.mode === '2v2') return match.result === 'won' ? 'Abandonaron los rivales.' : 'Abandonó tu compañero.';
+    return `${match.opponent?.username || 'Tu rival'} abandonó la partida.`;
   }
   return '';
 }

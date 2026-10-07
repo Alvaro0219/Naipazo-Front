@@ -9,24 +9,33 @@
       </transition>
     </SeatTag>
 
-    <!-- Rivales a los costados y la baza en curso en cruz -->
-    <div class="tr-b4__middle">
-      <SeatTag class="tr-b4__side" :p="seatAt(3)" :info="info(seatAt(3))" />
-
-      <div class="tr-b4__felt">
-        <div class="tr-b4__cross" aria-label="Baza en curso">
-          <div v-for="pos in [2, 3, 1, 0]" :key="pos" class="tr-b4__slot" :class="`tr-b4__slot--${pos}`">
-            <PlayingCard v-if="currentPlays[pos]" :card-id="currentPlays[pos]" size="sm" />
-          </div>
+    <!-- Paño: todas las cartas jugadas en la mano, cada una delante de quien la jugó -->
+    <div class="tr-b4__felt" aria-label="Cartas jugadas">
+      <div class="tr-b4__pile tr-b4__pile--top">
+        <PlayingCard v-for="card in piles[2]" :key="card" :card-id="card" size="sm" />
+      </div>
+      <div class="tr-b4__side tr-b4__side--left">
+        <SeatTag :p="seatAt(3)" :info="info(seatAt(3))" />
+        <div class="tr-b4__pile">
+          <PlayingCard v-for="card in piles[3]" :key="card" :card-id="card" size="sm" />
         </div>
+      </div>
+      <div class="tr-b4__center">
         <transition name="tr-pop">
           <div v-if="announcement" :key="announcement.key" class="tr-b4__announce" :class="{ 'tr-b4__announce--mine': announcement.mine }">
             {{ announcement.text }}
           </div>
         </transition>
       </div>
-
-      <SeatTag class="tr-b4__side" :p="seatAt(1)" :info="info(seatAt(1))" />
+      <div class="tr-b4__side tr-b4__side--right">
+        <SeatTag :p="seatAt(1)" :info="info(seatAt(1))" />
+        <div class="tr-b4__pile">
+          <PlayingCard v-for="card in piles[1]" :key="card" :card-id="card" size="sm" />
+        </div>
+      </div>
+      <div class="tr-b4__pile tr-b4__pile--bottom">
+        <PlayingCard v-for="card in piles[0]" :key="card" :card-id="card" size="sm" />
+      </div>
     </div>
 
     <!-- Bazas anteriores, estado y reloj -->
@@ -126,12 +135,13 @@ const relPos = (playerId) => {
 
 const partnerName = computed(() => props.nameOf(seatAt(2).id));
 
-const currentPlays = computed(() => {
-  const bazas = hand.value?.bazas || [];
-  const last = bazas.at(-1);
-  // Si la última baza ya terminó (fin de mano), se sigue mostrando hasta el próximo reparto
-  const plays = last?.plays || [];
-  return Object.fromEntries(plays.map((p) => [relPos(p.playerId), p.cardId]));
+/** Cartas jugadas en la mano por cada posición (0 = yo, 1 = derecha, 2 = compañero, 3 = izquierda), en orden. */
+const piles = computed(() => {
+  const result = [[], [], [], []];
+  for (const baza of hand.value?.bazas || []) {
+    for (const play of baza.plays) result[relPos(play.playerId)].push(play.cardId);
+  }
+  return result;
 });
 
 const bazaResults = computed(() => [0, 1, 2].map((i) => {
@@ -220,17 +230,18 @@ const SeatTag = defineComponent({
 
 .tr-b4__top { position: relative; }
 
-.tr-b4__middle {
-  width: 100%;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-  align-items: center;
-  gap: 6px;
-}
-
 .tr-b4__felt {
   position: relative;
-  padding: 10px;
+  width: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 36px minmax(0, 1fr);
+  grid-template-areas:
+    'top top top'
+    'left center right'
+    'bottom bottom bottom';
+  align-items: center;
+  gap: 8px;
+  padding: 10px 8px;
   border-radius: 18px;
   background:
     radial-gradient(ellipse at 50% 30%, rgba(255, 255, 255, 0.1), transparent 65%),
@@ -238,19 +249,28 @@ const SeatTag = defineComponent({
   box-shadow: inset 0 0 0 5px #14532d, inset 0 0 0 6px rgba(202, 138, 4, 0.5);
 }
 
-/* Cruz: compañero arriba, rivales a los costados, yo abajo */
-.tr-b4__cross {
-  display: grid;
-  grid-template-columns: 44px 44px 44px;
-  grid-template-rows: 64px 64px 64px;
-  gap: 4px;
+.tr-b4__side {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
 }
 
-.tr-b4__slot { display: flex; align-items: center; justify-content: center; }
-.tr-b4__slot--2 { grid-column: 2; grid-row: 1; }
-.tr-b4__slot--3 { grid-column: 1; grid-row: 2; }
-.tr-b4__slot--1 { grid-column: 3; grid-row: 2; }
-.tr-b4__slot--0 { grid-column: 2; grid-row: 3; }
+.tr-b4__side--left { grid-area: left; }
+.tr-b4__side--right { grid-area: right; }
+.tr-b4__center { grid-area: center; }
+.tr-b4__pile--top { grid-area: top; }
+.tr-b4__pile--bottom { grid-area: bottom; }
+
+/* Pila de cartas jugadas: superpuestas, la última arriba */
+.tr-b4__pile {
+  display: flex;
+  justify-content: center;
+  min-height: 64px;
+}
+
+.tr-b4__pile > * + * { margin-left: -20px; }
 
 .tr-badge {
   padding: 1px 7px;

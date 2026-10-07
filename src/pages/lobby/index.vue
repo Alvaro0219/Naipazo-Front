@@ -107,6 +107,14 @@
               :to="`/mesa/${item.data.id}`"
             />
             <q-btn
+              v-else-if="is2v2(item.data) && item.data.seats.length >= 4"
+              outline
+              color="grey-7"
+              no-caps
+              label="Completa"
+              disable
+            />
+            <q-btn
               v-else
               color="primary"
               unelevated
@@ -299,7 +307,7 @@ function handleJoinRoom(room) {
     title: `Mesa por ${formatChips(room.config.bet)} fichas`,
     message: `Al empezar se descuentan ${formatChips(room.config.bet)} fichas de tu saldo. `
       + (is2v2(room)
-        ? 'Si gana tu pareja, cada uno se lleva el doble; si pierden o abandonás, las perdés.'
+        ? 'Si gana tu pareja, cada uno se lleva el doble; si pierden o alguno abandona, las pierden los dos.'
         : 'Si ganás te llevás el pozo; si perdés o abandonás, las perdés.'),
     cancel: { label: 'Cancelar', flat: true, noCaps: true },
     ok: { label: 'Jugar', color: 'primary', unelevated: true, noCaps: true }

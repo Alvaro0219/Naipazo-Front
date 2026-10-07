@@ -35,10 +35,11 @@ const imageUrl = computed(() => (props.cardId ? cardImageUrl(props.cardId) : nul
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0;
+  /* Borde propio de carta: blanco, filete fino y un margen para que el dibujo no toque el canto */
+  padding: 4%;
   overflow: hidden;
-  border-radius: 9px;
-  border: 1px solid #d6cfae;
+  border-radius: 8% / 5.5%;
+  border: 1px solid #c9c2a6;
   background: #fff;
   box-shadow: 0 3px 8px rgba(2, 6, 23, 0.25);
   font: inherit;
@@ -46,12 +47,13 @@ const imageUrl = computed(() => (props.cardId ? cardImageUrl(props.cardId) : nul
   transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
 }
 
-/* Proporción de las imágenes de la baraja: 208 × 319 */
-.tr-card--sm { width: 44px; height: 67px; }
-.tr-card--md { width: 60px; height: 92px; }
-.tr-card--lg { width: 78px; height: 120px; }
+/* Alto = interior (ancho − margen − filete) con la proporción del dibujo (208 × 319) + margen y filete */
+.tr-card--sm { width: 44px; height: 65px; }
+.tr-card--md { width: 60px; height: 88px; }
+.tr-card--lg { width: 78px; height: 115px; }
 
 .tr-card--back {
+  padding: 0;
   border: 2px solid #ca8a04;
   background:
     repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.08) 0 4px, transparent 4px 8px),
@@ -71,12 +73,13 @@ const imageUrl = computed(() => (props.cardId ? cardImageUrl(props.cardId) : nul
 
 .tr-card--dim { opacity: 0.55; }
 
-/* La imagen trae su propio marco redondeado: se agranda un poco para que el borde lo ponga la carta */
+/* La imagen va entera; solo se le recorta su contorno negro de 1 px (esquinas de 12 px sobre 208 × 319) */
 .tr-card__img {
-  flex-shrink: 0;
-  width: 108%;
-  height: 106%;
-  object-fit: cover;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  clip-path: inset(0.7% round 5.8% / 3.8%);
   pointer-events: none;
   user-select: none;
 }

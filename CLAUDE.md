@@ -93,7 +93,8 @@ el corte de red se simula con `setOffline` + `window.__socketDebug.socket` (solo
   End-to-end con 4 contextos: `e2e/twovstwo.spec.js`.
 - **Exactitud (`../EXACTITUD_DEL_JUEGO.md`, sección 8):** `components/game/__tests__/cards.test.js` (las 40 cartas, la carta tocada
   es la enviada, barra = `availableActions`, tantero = `scoreSections`), `utils/__tests__/gameText.test.js` (cartel y textos) y
-  `stores/__tests__/game.test.js` (reloj con el plazo del servidor). Hoja de contacto de las 40 cartas en `/dev/cartas` (solo
+  `stores/__tests__/game.test.js` (reloj con el plazo del servidor). Cartas: imágenes en `public/cartas/{id}.png` (baraja de
+  Wikimedia Commons, CC BY-SA 3.0; créditos en `public/cartas/CREDITOS.md` y en Términos), vía `utils/cards.js#cardImageUrl`. Hoja de contacto de las 40 cartas en `/dev/cartas` (solo
   desarrollo). `game.frozen` (evento `game:frozen`): diálogo "Partida suspendida" en la mesa. `IntegrityCard` en Administración.
 - Git: siempre en `main`, sin ramas nuevas; no hacer push sin confirmarlo.
 - Despliegue en Cloudflare Pages; `public/_redirects` resuelve el ruteo SPA.

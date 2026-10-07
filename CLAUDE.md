@@ -18,7 +18,7 @@ npm run test:e2e # end-to-end con Playwright (e2e/), ~3 min
 
 **End-to-end (`playwright.config.js`):** levantan su propio backend en :4100 (base `truco_e2e`, derivada de
 `MONGO_URL` de `../truco-back/.env`, o `E2E_MONGO_URL`) y su propio front en :5175, así no tocan los servidores
-ni la base de desarrollo. Usan el Chrome instalado (`channel: chrome`) y **un contexto de navegador por jugador**
+ni la base de desarrollo. Antes de levantar ese backend, `e2e/reset-db.mjs` vacía `truco_e2e` (se niega con cualquier otro nombre). Usan el Chrome instalado (`channel: chrome`) y **un contexto de navegador por jugador**
 (localStorage aislado). Los emails salen por `EMAIL_OUTBOX_FILE` (`test-results/e2e-emails.jsonl`) y el backend
 corre con `RATE_LIMITS_RELAXED`. Para manejar las partidas leen el store `game` y hacen clics (`e2e/helpers.js`);
 el corte de red se simula con `setOffline` + `window.__socketDebug.socket` (solo existe en desarrollo).

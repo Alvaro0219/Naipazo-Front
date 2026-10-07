@@ -40,7 +40,8 @@ export default defineConfig({
   },
   webServer: [
     {
-      command: 'node src/app.js',
+      // Primero vacía truco_e2e (e2e/reset-db.mjs, con guarda por nombre) y después levanta el backend
+      command: `node "${fileURLToPath(new URL('./e2e/reset-db.mjs', import.meta.url))}" && node src/app.js`,
       cwd: BACK_DIR,
       url: 'http://localhost:4100/health',
       reuseExistingServer: false,

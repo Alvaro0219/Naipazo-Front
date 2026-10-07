@@ -267,10 +267,10 @@ const SeatTag = defineComponent({
 .tr-b4__pile {
   display: flex;
   justify-content: center;
-  min-height: 64px;
+  min-height: 77px;
 }
 
-.tr-b4__pile > * + * { margin-left: -20px; }
+.tr-b4__pile > * + * { margin-left: -23px; }
 
 .tr-badge {
   padding: 1px 7px;

@@ -26,7 +26,7 @@ defineEmits(['play']);
   display: flex;
   justify-content: center;
   gap: 10px;
-  min-height: 122px;
+  min-height: 143px;
   padding-top: 8px;
 }
 </style>

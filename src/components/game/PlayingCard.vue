@@ -48,9 +48,9 @@ const imageUrl = computed(() => (props.cardId ? cardImageUrl(props.cardId) : nul
 }
 
 /* Proporción del dibujo: 208 × 319 */
-.tr-card--sm { width: 44px; height: 67px; }
-.tr-card--md { width: 60px; height: 92px; }
-.tr-card--lg { width: 78px; height: 120px; }
+.tr-card--sm { width: 50px; height: 77px; }
+.tr-card--md { width: 68px; height: 104px; }
+.tr-card--lg { width: 88px; height: 135px; }
 
 .tr-card--back {
   border-radius: 9px;

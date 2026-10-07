@@ -115,7 +115,7 @@ const statusText = computed(() => {
 .tr-board__backs {
   display: flex;
   gap: 6px;
-  min-height: 64px;
+  min-height: 77px;
 }
 
 .tr-badge {

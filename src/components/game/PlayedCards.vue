@@ -61,16 +61,16 @@ const slots = computed(() => [0, 1, 2].map((i) => {
 .tr-played__baza--current { background: rgba(255, 255, 255, 0.07); }
 
 .tr-played__cell {
-  width: 44px;
-  height: 64px;
+  width: 50px;
+  height: 77px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .tr-played__empty {
-  width: 44px;
-  height: 64px;
+  width: 50px;
+  height: 77px;
   border-radius: 9px;
   border: 1px dashed rgba(255, 255, 255, 0.2);
 }

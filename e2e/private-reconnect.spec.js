@@ -23,11 +23,11 @@ test('sala privada por código: no aparece en el lobby y se entra con el código
   // Se une con el código, escrito en minúsculas
   await guest.page.getByRole('button', { name: 'Sala privada' }).click();
   const dialog = guest.page.locator('.q-dialog');
-  await dialog.getByRole('button', { name: 'Unirme' }).first().click();
+  await dialog.getByRole('radio', { name: 'Unirme' }).click();
   await dialog.getByLabel('Código de la sala').fill(code.toLowerCase());
   await dialog.getByRole('button', { name: 'Buscar sala' }).click();
   await expect(dialog.locator('.tr-private__found')).toContainText('150 fichas por jugador');
-  await dialog.locator('.q-card__actions').getByRole('button', { name: 'Unirme' }).click();
+  await dialog.locator('.tr-private__acciones').getByRole('button', { name: 'Unirme' }).click();
 
   await expect(guest.page).toHaveURL(host.page.url());
   await expect(guest.page.locator('.tr-hand')).toBeVisible();

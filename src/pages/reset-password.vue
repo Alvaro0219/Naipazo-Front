@@ -2,46 +2,46 @@
   <div class="tr-auth-shell">
     <div class="tr-auth-card">
       <div class="tr-auth-brand">
-        <img src="/favicon.svg" alt="" />
+        <SolDeMayo :size="40" />
         <div>
           <strong>Nueva contraseña</strong>
           <span>Al cambiarla se cierran todas tus sesiones abiertas</span>
         </div>
       </div>
 
-      <q-banner v-if="!token" rounded class="bg-red-1 text-red-10 q-mb-md" role="alert">
+      <NzAviso v-if="!token" tono="rojo" class="q-mb-md">
         El enlace está incompleto. Pedí uno nuevo desde "¿Olvidaste tu contraseña?".
-      </q-banner>
+      </NzAviso>
 
-      <q-form v-else class="column q-gutter-y-sm" greedy @submit.prevent="handleSubmit">
-        <q-input
+      <q-form v-else class="column q-gutter-y-md" greedy @submit.prevent="handleSubmit">
+        <NzCampo
           v-model="password"
           label="Contraseña nueva"
-          outlined
           :type="showPassword ? 'text' : 'password'"
           autocomplete="new-password"
           :rules="[rules.password]"
           lazy-rules
         >
           <template #append>
-            <q-icon
-              :name="showPassword ? 'visibility_off' : 'visibility'"
-              class="cursor-pointer"
+            <button
+              type="button"
+              class="nz-campo-boton"
               :aria-label="showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'"
               @click="showPassword = !showPassword"
-            />
+            >
+              <Icono :nombre="showPassword ? 'ocultar' : 'ver'" />
+            </button>
           </template>
-        </q-input>
-        <q-input
+        </NzCampo>
+        <NzCampo
           v-model="confirm"
           label="Repetí la contraseña"
-          outlined
           :type="showPassword ? 'text' : 'password'"
           autocomplete="new-password"
           :rules="[(v) => v === password || 'Las contraseñas no coinciden']"
           lazy-rules
         />
-        <q-btn type="submit" color="primary" size="lg" unelevated no-caps label="Cambiar contraseña" :loading="loading" class="full-width" />
+        <NzBoton type="submit" variante="principal" tamano="lg" bloque label="Cambiar contraseña" :loading="loading" />
       </q-form>
 
       <div class="tr-auth-footer">

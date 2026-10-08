@@ -3,7 +3,6 @@
     <!-- Rival -->
     <section class="tr-board__player">
       <div class="tr-board__who">
-        <q-icon name="person" size="18px" />
         <strong>{{ opponentName }}</strong>
         <span v-if="hand && hand.manoId !== view.me.id" class="tr-badge">Mano</span>
         <span v-if="hand?.turnPlayerId === opponent.id" class="tr-badge tr-badge--turn">Juega</span>
@@ -92,7 +91,7 @@ const statusText = computed(() => {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  color: #fff;
+  color: var(--texto);
 }
 
 .tr-board__player,
@@ -109,7 +108,7 @@ const statusText = computed(() => {
   flex-wrap: wrap;
   justify-content: center;
   gap: 6px;
-  font-size: 0.95rem;
+  font-size: 15px;
 }
 
 .tr-board__backs {
@@ -121,14 +120,13 @@ const statusText = computed(() => {
 .tr-badge {
   padding: 2px 8px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.15);
-  font-size: 0.7rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  border: 1px solid var(--linea);
+  color: var(--texto-suave);
+  font-size: 12px;
+  font-weight: 600;
 }
 
-.tr-badge--turn { background: #fde047; color: #422006; }
+.tr-badge--turn { border-color: var(--celeste); color: var(--celeste-vivo); }
 
 .tr-board__felt {
   position: relative;
@@ -137,11 +135,11 @@ const statusText = computed(() => {
   align-items: center;
   gap: 10px;
   padding: 14px 8px;
-  border-radius: 18px;
-  background:
-    radial-gradient(ellipse at 50% 30%, rgba(255, 255, 255, 0.1), transparent 65%),
-    #15803d;
-  box-shadow: inset 0 0 0 5px #14532d, inset 0 0 0 6px rgba(202, 138, 4, 0.5);
+  /* Paño (6.4): noche-2 liso, borde celeste al 45 % con un resplandor muy suave */
+  border-radius: var(--radio-mesa);
+  background: var(--noche-2);
+  border: 1.5px solid rgba(94, 200, 255, 0.45);
+  box-shadow: var(--glow-celeste-3);
 }
 
 .tr-board__status {
@@ -160,8 +158,9 @@ const statusText = computed(() => {
 .tr-chip {
   padding: 3px 10px;
   border-radius: 999px;
-  background: rgba(0, 0, 0, 0.25);
-  font-size: 0.75rem;
+  border: 1px solid var(--linea);
+  color: var(--texto-suave);
+  font-size: 12px;
   font-weight: 600;
 }
 
@@ -170,20 +169,19 @@ const statusText = computed(() => {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
+  /* Cartel del canto (8.2): el detalle por tipo de canto va en N4 */
   padding: 10px 22px;
-  border-radius: 14px;
-  background: #fde047;
-  color: #422006;
-  font-size: 1.6rem;
-  font-weight: 900;
-  letter-spacing: 0.01em;
+  color: var(--celeste-vivo);
+  font-family: var(--fuente-titulo);
+  font-size: clamp(36px, 11vw, 64px);
+  font-weight: 800;
   white-space: nowrap;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  text-shadow: 0 0 18px rgba(94, 200, 255, 0.55);
   pointer-events: none;
   z-index: 2;
 }
 
-.tr-board__announce--mine { background: #fff; color: #14532d; }
+.tr-board__announce--mine { color: var(--texto); }
 
 .tr-pop-enter-active { transition: transform 0.18s ease-out, opacity 0.18s ease-out; }
 .tr-pop-leave-active { transition: opacity 0.3s ease; }

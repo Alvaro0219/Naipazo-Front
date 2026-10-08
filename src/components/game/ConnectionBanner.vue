@@ -1,7 +1,7 @@
 <template>
   <div v-if="message" class="tr-conn" :class="`tr-conn--${message.tone}`" role="status">
-    <q-spinner v-if="message.spinner" size="16px" />
-    <q-icon v-else :name="message.icon" size="18px" />
+    <span v-if="message.spinner" class="nz-anillo nz-anillo--chico" aria-hidden="true" />
+    <Icono v-else :nombre="message.icon" :size="18" />
     <span>{{ message.text }}</span>
   </div>
 </template>
@@ -37,11 +37,14 @@ const message = computed(() => {
   justify-content: center;
   gap: 8px;
   padding: 8px 12px;
-  font-size: 0.85rem;
+  font-size: 14px;
   font-weight: 600;
   text-align: center;
+  background: var(--noche-3);
+  color: var(--texto);
+  border-bottom: 1px solid var(--linea);
 }
 
-.tr-conn--warn { background: #fef3c7; color: #78350f; }
-.tr-conn--info { background: #e0f2fe; color: #075985; }
+.tr-conn--warn { border-bottom-color: var(--ambar); }
+.tr-conn--info { border-bottom-color: var(--celeste); }
 </style>

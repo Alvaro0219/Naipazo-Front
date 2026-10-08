@@ -2,18 +2,17 @@
   <div class="tr-auth-shell">
     <div class="tr-auth-card">
       <div class="tr-auth-brand">
-        <img src="/favicon.svg" alt="" />
+        <SolDeMayo :size="40" />
         <div>
           <strong>Creá tu cuenta</strong>
           <span>Recibís 1000 fichas virtuales gratis por día</span>
         </div>
       </div>
 
-      <q-form ref="formRef" class="column q-gutter-y-xs" greedy @submit.prevent="handleSubmit">
-        <q-input
+      <q-form ref="formRef" class="column q-gutter-y-md" greedy @submit.prevent="handleSubmit">
+        <NzCampo
           v-model="form.username"
           label="Nombre de usuario"
-          outlined
           maxlength="20"
           autocomplete="username"
           autocapitalize="off"
@@ -24,15 +23,14 @@
           :loading="checking.username"
         >
           <template v-if="available.username" #append>
-            <q-icon name="check_circle" color="positive" aria-label="Disponible" />
+            <Icono nombre="ok" label="Disponible" class="tr-disponible" />
           </template>
-        </q-input>
+        </NzCampo>
 
-        <q-input
+        <NzCampo
           v-model="form.email"
           label="Email"
           type="email"
-          outlined
           autocomplete="email"
           autocapitalize="off"
           :rules="[rules.email]"
@@ -41,14 +39,13 @@
           :loading="checking.email"
         >
           <template v-if="available.email" #append>
-            <q-icon name="check_circle" color="positive" aria-label="Disponible" />
+            <Icono nombre="ok" label="Disponible" class="tr-disponible" />
           </template>
-        </q-input>
+        </NzCampo>
 
-        <q-input
+        <NzCampo
           v-model="form.password"
           label="Contraseña"
-          outlined
           :type="showPassword ? 'text' : 'password'"
           autocomplete="new-password"
           hint="Mínimo 8 caracteres"
@@ -56,19 +53,20 @@
           lazy-rules
         >
           <template #append>
-            <q-icon
-              :name="showPassword ? 'visibility_off' : 'visibility'"
-              class="cursor-pointer"
+            <button
+              type="button"
+              class="nz-campo-boton"
               :aria-label="showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'"
               @click="showPassword = !showPassword"
-            />
+            >
+              <Icono :nombre="showPassword ? 'ocultar' : 'ver'" />
+            </button>
           </template>
-        </q-input>
+        </NzCampo>
 
-        <q-input
+        <NzCampo
           v-model="form.confirm"
           label="Repetí la contraseña"
-          outlined
           :type="showPassword ? 'text' : 'password'"
           autocomplete="new-password"
           :rules="[(v) => v === form.password || 'Las contraseñas no coinciden']"
@@ -84,16 +82,7 @@
         <q-checkbox v-model="form.confirmAdult" dense class="tr-check" label="Declaro que soy mayor de 18 años" />
         <div v-if="checkboxError" class="tr-check-error" role="alert">{{ checkboxError }}</div>
 
-        <q-btn
-          type="submit"
-          color="primary"
-          size="lg"
-          unelevated
-          no-caps
-          label="Crear cuenta"
-          :loading="loading"
-          class="full-width q-mt-md"
-        />
+        <NzBoton type="submit" variante="principal" tamano="lg" bloque label="Crear cuenta" :loading="loading" class="q-mt-md" />
       </q-form>
 
       <div class="tr-auth-footer">
@@ -209,12 +198,13 @@ async function handleSubmit() {
 </script>
 
 <style scoped>
-.tr-check { font-size: 0.9rem; }
+.tr-check { font-size: 14px; }
+.tr-disponible { color: var(--verde); }
 .tr-check + .tr-check { margin-top: 6px; }
 
 .tr-check-error {
   margin-top: 6px;
-  color: #dc2626;
-  font-size: 0.8rem;
+  color: var(--rojo);
+  font-size: 13px;
 }
 </style>

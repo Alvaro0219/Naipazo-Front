@@ -40,7 +40,7 @@ const imageUrl = computed(() => (props.cardId ? cardImageUrl(props.cardId) : nul
   /* Mismo redondeo que las esquinas del dibujo (12 px sobre 208 × 319) */
   border-radius: 5.8% / 3.8%;
   border: 0;
-  background: #fff;
+  background: var(--naipe);
   box-shadow: 0 3px 8px rgba(2, 6, 23, 0.25);
   font: inherit;
   color: inherit;
@@ -54,10 +54,9 @@ const imageUrl = computed(() => (props.cardId ? cardImageUrl(props.cardId) : nul
 
 .tr-card--back {
   border-radius: 9px;
-  border: 2px solid #ca8a04;
-  background:
-    repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.08) 0 4px, transparent 4px 8px),
-    #14532d;
+  /* Dorso provisorio en azul noche: el Sol de Mayo llega en N5 */
+  border: 1.5px solid var(--linea);
+  background: var(--noche-2);
 }
 
 .tr-card--clickable { cursor: pointer; }
@@ -69,7 +68,7 @@ const imageUrl = computed(() => (props.cardId ? cardImageUrl(props.cardId) : nul
   outline: none;
 }
 
-.tr-card--clickable:focus-visible { box-shadow: 0 0 0 3px #fde047, 0 10px 18px rgba(2, 6, 23, 0.35); }
+.tr-card--clickable:focus-visible { box-shadow: 0 0 0 2px var(--celeste), var(--glow-celeste-1), 0 10px 18px rgba(2, 6, 23, 0.35); }
 
 .tr-card--dim { opacity: 0.55; }
 

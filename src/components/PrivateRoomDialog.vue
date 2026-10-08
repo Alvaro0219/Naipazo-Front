@@ -1,60 +1,33 @@
 <template>
-  <q-dialog :model-value="modelValue" @update:model-value="$emit('update:modelValue', $event)">
-    <q-card class="tr-private">
-      <q-card-section>
-        <h2 class="tr-private__title">Sala privada</h2>
-        <p class="tr-private__lead">No aparece en el lobby: solo entra quien tenga el código.</p>
-      </q-card-section>
+  <NzHoja :model-value="modelValue" titulo="Sala privada" @update:model-value="$emit('update:modelValue', $event)">
+    <div class="tr-private">
+      <p class="tr-private__lead">No aparece en el lobby: solo entra quien tenga el código.</p>
 
-      <q-card-section class="q-pt-none">
-        <q-btn-toggle
-          v-model="tab"
-          spread
-          no-caps
-          unelevated
-          toggle-color="primary"
-          color="grey-2"
-          text-color="dark"
-          :options="[{ label: 'Crear', value: 'create' }, { label: 'Unirme', value: 'join' }]"
-        />
-      </q-card-section>
+      <NzSegmentado
+        v-model="tab"
+        bloque
+        aria-label="Crear o unirme"
+        class="q-mb-md"
+        :opciones="[{ label: 'Crear', value: 'create' }, { label: 'Unirme', value: 'join' }]"
+      />
 
       <!-- Crear: puntos y monto escrito directamente -->
       <q-form v-if="tab === 'create'" ref="createForm" @submit.prevent="create">
-        <q-card-section class="column q-gutter-y-md">
+        <div class="column q-gutter-y-md">
           <div>
             <div class="tr-private__label">Puntos</div>
-            <q-btn-toggle
-              v-model="targetPoints"
-              spread
-              no-caps
-              unelevated
-              toggle-color="primary"
-              color="grey-2"
-              text-color="dark"
-              :options="[{ label: 'A 15', value: 15 }, { label: 'A 30', value: 30 }]"
-            />
+            <NzSegmentado v-model="targetPoints" bloque aria-label="Puntos" :opciones="[{ label: 'A 15', value: 15 }, { label: 'A 30', value: 30 }]" />
           </div>
 
           <div>
             <div class="tr-private__label">Modo</div>
-            <q-btn-toggle
-              v-model="mode"
-              spread
-              no-caps
-              unelevated
-              toggle-color="primary"
-              color="grey-2"
-              text-color="dark"
-              :options="[{ label: '1 vs 1', value: '1v1' }, { label: '2 vs 2 (parejas)', value: '2v2' }]"
-            />
+            <NzSegmentado v-model="mode" bloque aria-label="Modo" :opciones="[{ label: '1 vs 1', value: '1v1' }, { label: '2 vs 2 (parejas)', value: '2v2' }]" />
           </div>
 
-          <q-input
+          <NzCampo
             v-model.number="bet"
             type="number"
             inputmode="numeric"
-            outlined
             label="Fichas por jugador"
             :min="0"
             :max="maxAllowed"
@@ -63,20 +36,19 @@
           />
 
           <ChipsNotice compact />
-        </q-card-section>
+        </div>
 
-        <q-card-actions align="right">
-          <q-btn flat no-caps label="Cancelar" v-close-popup />
-          <q-btn type="submit" color="primary" unelevated no-caps label="Crear sala" :loading="loading" />
-        </q-card-actions>
+        <div class="tr-private__acciones">
+          <NzBoton variante="texto" label="Cancelar" @click="$emit('update:modelValue', false)" />
+          <NzBoton type="submit" variante="principal" label="Crear sala" :loading="loading" />
+        </div>
       </q-form>
 
       <!-- Unirme: se escribe el código y se confirma antes de bloquear fichas -->
       <q-form v-else @submit.prevent="lookup">
-        <q-card-section class="column q-gutter-y-md">
-          <q-input
+        <div class="column q-gutter-y-md">
+          <NzCampo
             v-model="code"
-            outlined
             label="Código de la sala"
             maxlength="6"
             autocomplete="off"
@@ -91,7 +63,7 @@
           <div v-if="found" class="tr-private__found" role="status">
             <strong>Sala de {{ found.seats[0]?.username }}</strong>
             <span>
-              {{ found.config.mode === '2v2' ? '2 vs 2' : '1 vs 1' }} · A {{ found.config.targetPoints }} · sin flor ·
+              {{ found.config.mode === '2v2' ? '2 vs 2' : '1 vs 1' }} · A {{ found.config.targetPoints }} ·
               <template v-if="found.config.bet">{{ formatChips(found.config.bet) }} fichas por jugador</template>
               <template v-else>gratis</template>
             </span>
@@ -106,47 +78,41 @@
             <div class="tr-private__label">Elegí tu lugar</div>
             <div v-for="team in [0, 1]" :key="team" class="tr-private__team">
               <span class="tr-private__team-name">Pareja {{ team === 0 ? 'A' : 'B' }}</span>
-              <q-btn
+              <NzBoton
                 v-for="seatNo in [team, team + 2]"
                 :key="seatNo"
-                no-caps
-                unelevated
-                size="sm"
+                tamano="sm"
+                :variante="chosenSeat === seatNo ? 'luminoso' : 'secundario'"
                 :disable="Boolean(occupant(seatNo))"
-                :color="chosenSeat === seatNo ? 'primary' : 'grey-2'"
-                :text-color="chosenSeat === seatNo ? 'white' : 'dark'"
                 :label="occupant(seatNo) || 'Libre'"
+                :aria-pressed="chosenSeat === seatNo"
                 @click="chosenSeat = seatNo"
               />
             </div>
           </div>
-        </q-card-section>
+        </div>
 
-        <q-card-actions align="right">
-          <q-btn flat no-caps label="Cancelar" v-close-popup />
-          <q-btn
+        <div class="tr-private__acciones">
+          <NzBoton variante="texto" label="Cancelar" @click="$emit('update:modelValue', false)" />
+          <NzBoton
             v-if="!found"
             type="submit"
-            color="primary"
-            unelevated
-            no-caps
+            variante="principal"
             label="Buscar sala"
             :loading="loading"
           />
-          <q-btn
+          <NzBoton
             v-else
-            color="primary"
-            unelevated
-            no-caps
+            variante="principal"
             label="Unirme"
             :disable="!canAffordFound"
             :loading="loading"
             @click="join"
           />
-        </q-card-actions>
+        </div>
       </q-form>
-    </q-card>
-  </q-dialog>
+    </div>
+  </NzHoja>
 </template>
 
 <script setup>
@@ -254,30 +220,23 @@ async function join() {
 </script>
 
 <style scoped>
-.tr-private { width: min(92vw, 420px); }
-
-.tr-private__title {
-  margin: 0;
-  font-size: 1.2rem;
-  font-weight: 700;
-  line-height: 1.3;
-}
-
 .tr-private__lead {
-  margin: 4px 0 0;
-  color: #64748b;
-  font-size: 0.9rem;
+  margin: 0 0 12px;
+  color: var(--texto-suave);
+  font-size: 14px;
 }
 
 .tr-private__label {
   margin-bottom: 6px;
   font-weight: 600;
-  font-size: 0.9rem;
+  font-size: 14px;
+  color: var(--texto-suave);
 }
 
 .tr-private :deep(.tr-private__code-input) {
-  font-size: 1.4rem;
-  font-weight: 800;
+  font-family: var(--fuente-titulo);
+  font-size: 24px;
+  font-weight: 700;
   letter-spacing: 0.25em;
   text-transform: uppercase;
 }
@@ -286,11 +245,11 @@ async function join() {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  padding: 10px 12px;
-  border-radius: 10px;
-  background: #f0fdf4;
-  border: 1px solid #bbf7d0;
-  color: #14532d;
+  padding: 12px 14px;
+  border-radius: var(--radio-boton);
+  background: var(--noche-3);
+  border: 1px solid var(--celeste);
+  color: var(--texto);
 }
 
 .tr-private__seats {
@@ -308,13 +267,20 @@ async function join() {
 
 .tr-private__team-name {
   min-width: 64px;
-  font-size: 0.85rem;
+  font-size: 14px;
   font-weight: 600;
 }
 
 .tr-private__found-note {
   margin-top: 4px;
-  font-size: 0.85rem;
-  color: #166534;
+  font-size: 14px;
+  color: var(--texto-suave);
+}
+
+.tr-private__acciones {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 20px;
 }
 </style>

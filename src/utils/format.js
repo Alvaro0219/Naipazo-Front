@@ -35,3 +35,17 @@ export const LEDGER_TYPE_LABELS = {
   TOURNAMENT_PRIZE: 'Premio de torneo',
   TOURNAMENT_REFUND: 'Devolución de inscripción'
 };
+
+/**
+ * Color de un monto de fichas (ESTILOS_NAIPAZO.md, 10.6): premios en oro, crédito diario en blanco, devoluciones en
+ * verde y lo que sale (apuesta, inscripción) en texto suave. Perder es neutro: nunca rojo.
+ * Devuelve la clase global `nz-monto--*` de css/base.css.
+ */
+export function amountToneClass(amount, type = null) {
+  if (type === 'BET_PAYOUT' || type === 'TOURNAMENT_PRIZE') return 'nz-monto--oro';
+  if (type === 'BET_REFUND' || type === 'TOURNAMENT_REFUND') return 'nz-monto--verde';
+  if (amount < 0) return 'nz-monto--suave';
+  // Sin tipo (resultado de una partida): ganar es premio
+  if (!type && amount > 0) return 'nz-monto--oro';
+  return 'nz-monto--texto';
+}

@@ -6,18 +6,7 @@
     </header>
 
     <LoadingState :loading="loading" :empty="false">
-      <q-btn-toggle
-        v-model="statsMode"
-        no-caps
-        unelevated
-        rounded
-        toggle-color="primary"
-        color="white"
-        text-color="dark"
-        class="q-mb-sm"
-        aria-label="Modo"
-        :options="[{ label: '1 vs 1', value: '1v1' }, { label: '2 vs 2', value: '2v2' }]"
-      />
+      <NzSegmentado v-model="statsMode" class="q-mb-sm" aria-label="Modo" :opciones="[{ label: '1 vs 1', value: '1v1' }, { label: '2 vs 2', value: '2v2' }]" />
       <section class="tr-stats" aria-label="Estadísticas">
         <div v-for="stat in stats" :key="stat.label" class="tr-stat">
           <span class="tr-stat__value tr-num">{{ stat.value }}</span>
@@ -29,10 +18,9 @@
     <section class="tr-section-card">
       <h2>Cambiar contraseña</h2>
       <q-form ref="formRef" class="column q-gutter-y-sm tr-password-form" greedy @submit.prevent="handlePassword">
-        <q-input
+        <NzCampo
           v-model="form.current"
           label="Contraseña actual"
-          outlined
           type="password"
           autocomplete="current-password"
           :rules="[rules.required('La contraseña actual')]"
@@ -41,33 +29,31 @@
           lazy-rules
           @update:model-value="currentError = ''"
         />
-        <q-input
+        <NzCampo
           v-model="form.next"
           label="Contraseña nueva"
-          outlined
           type="password"
           autocomplete="new-password"
           hint="Mínimo 8 caracteres"
           :rules="[rules.password]"
           lazy-rules
         />
-        <q-input
+        <NzCampo
           v-model="form.confirm"
           label="Repetí la contraseña nueva"
-          outlined
           type="password"
           autocomplete="new-password"
           :rules="[(v) => v === form.next || 'Las contraseñas no coinciden']"
           lazy-rules
         />
         <p class="tr-password-note">Al cambiarla se cierran tus sesiones en otros dispositivos.</p>
-        <q-btn type="submit" color="primary" unelevated no-caps label="Guardar contraseña" :loading="saving" class="self-start" />
+        <NzBoton type="submit" variante="principal" label="Guardar contraseña" :loading="saving" class="self-start" />
       </q-form>
     </section>
 
     <section class="tr-section-card tr-profile-links">
-      <q-btn v-if="auth.isAdmin" flat no-caps color="primary" icon="admin_panel_settings" label="Panel de administración" to="/admin" />
-      <q-btn flat no-caps color="negative" icon="logout" label="Cerrar sesión" @click="handleLogout" />
+      <NzBoton v-if="auth.isAdmin" variante="secundario" icono="admin" label="Panel de administración" to="/admin" />
+      <NzBoton variante="texto" tono="rojo" icono="salir" label="Cerrar sesión" @click="handleLogout" />
     </section>
 
     <p class="tr-profile-note">El nombre de usuario no se puede cambiar.</p>
@@ -161,20 +147,21 @@ onMounted(async () => {
   flex-direction: column;
   gap: 2px;
   padding: 14px 12px;
-  border-radius: 14px;
-  background: #fff;
-  border: 1px solid #e2e8f0;
+  border-radius: var(--radio-panel);
+  background: var(--noche-2);
+  border: 1px solid var(--linea);
 }
 
 .tr-stat__value {
-  font-size: 1.5rem;
-  font-weight: 800;
+  font-family: var(--fuente-titulo);
+  font-size: 24px;
+  font-weight: 700;
   line-height: 1.1;
 }
 
 .tr-stat__label {
-  color: #64748b;
-  font-size: 0.8rem;
+  color: var(--texto-suave);
+  font-size: 13px;
 }
 
 .tr-password-form { max-width: 420px; }
@@ -182,8 +169,8 @@ onMounted(async () => {
 .tr-password-note,
 .tr-profile-note {
   margin: 0;
-  color: #64748b;
-  font-size: 0.8rem;
+  color: var(--texto-suave);
+  font-size: 13px;
 }
 
 .tr-profile-links {

@@ -1,24 +1,23 @@
 <template>
-  <q-banner v-if="visible" rounded class="tr-verify-banner bg-amber-1 text-brown-10" role="status">
-    <template #avatar><q-icon name="mark_email_unread" color="warning" /></template>
+  <NzAviso v-if="visible" tono="celeste" icono="emailPendiente" class="tr-verify-banner">
     <strong>{{ config.requireEmailVerification ? 'Verificá tu email para recibir tus fichas diarias.' : 'Verificá tu email.' }}</strong>
     Te mandamos un enlace a {{ auth.user.email }}.
-    <template #action>
-      <q-btn
-        flat
-        no-caps
-        color="brown-10"
+    <template #accion>
+      <NzBoton
+        variante="secundario"
+        tamano="sm"
         :label="sent ? 'Email enviado' : 'Reenviar email'"
-        :icon="sent ? 'check' : 'send'"
+        :icono="sent ? 'tilde' : 'enviar'"
         :disable="sent"
         :loading="loading"
         @click="resend"
       />
     </template>
-  </q-banner>
+  </NzAviso>
 </template>
 
 <script setup>
+// Banner de verificación (ESTILOS_NAIPAZO.md, 10.9): panel noche-3 con borde celeste fino
 import { computed, ref } from 'vue';
 import { useQuasar } from 'quasar';
 import { useGameConfig } from '../composables/useGameConfig.js';

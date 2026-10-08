@@ -1,0 +1,309 @@
+/* Base global de Naipazo (ESTILOS_NAIPAZO.md, secciones 3 a 5). Modo oscuro fijo.
+   Quasar se usa como base funcional, no como estética: acá se anulan sus sombras, elevaciones y fondos claros. */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body, #app { height: 100%; }
+
+body {
+  margin: 0;
+  color: var(--texto);
+  font-family: var(--fuente-texto);
+  font-size: 16px;
+  line-height: 1.5;
+  /* Único degradado de fondo permitido (3.1): luz central suave */
+  background-color: var(--noche-1);
+  background-image: radial-gradient(ellipse at 50% 30%, var(--noche-3) 0%, var(--noche-1) 55%, var(--noche-0) 100%);
+  background-attachment: fixed;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--fuente-titulo);
+  color: var(--texto);
+  letter-spacing: -0.01em;
+}
+
+a { color: var(--celeste); }
+a:hover { color: var(--celeste-vivo); }
+
+::selection { background: rgba(94, 200, 255, 0.35); }
+
+/* Números: tantos, saldo y tiempo con cifras de ancho fijo */
+.tr-num { font-variant-numeric: tabular-nums; }
+.nz-titulo { font-family: var(--fuente-titulo); }
+
+/* Foco con teclado (5.1): anillo celeste de 2 px */
+:focus-visible {
+  outline: 2px solid var(--celeste);
+  outline-offset: 2px;
+  box-shadow: var(--glow-celeste-1);
+}
+
+/* Solo para lectores de pantalla */
+.nz-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ─── Clases compartidas de las páginas ───────────────────────── */
+
+.tr-page-shell {
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 20px 16px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.tr-page-header h1 {
+  margin: 0;
+  font-size: 24px;
+  line-height: 1.2;
+  font-weight: 700;
+}
+
+.tr-page-header p {
+  margin: 4px 0 0;
+  color: var(--texto-suave);
+  font-size: 14px;
+}
+
+/* Panel (5.2): fondo noche-2, borde fino, sin sombra */
+.tr-section-card {
+  background: var(--noche-2);
+  border: 1px solid var(--linea);
+  border-radius: var(--radio-panel);
+  padding: 16px;
+}
+
+.tr-section-card h2 {
+  margin: 0 0 12px;
+  font-size: 16px;
+  line-height: 1.3;
+  font-weight: 600;
+}
+
+/* Pantallas de acceso: el detalle se hace en N2 */
+.tr-auth-shell {
+  min-height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+}
+
+.tr-auth-card {
+  width: 100%;
+  max-width: 420px;
+  background: var(--noche-2);
+  border: 1px solid var(--linea);
+  border-radius: var(--radio-panel);
+  padding: 28px 22px;
+}
+
+.tr-auth-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.tr-auth-brand strong {
+  display: block;
+  font-family: var(--fuente-titulo);
+  font-size: 20px;
+  line-height: 1.1;
+}
+
+.tr-auth-brand span {
+  color: var(--texto-suave);
+  font-size: 14px;
+}
+
+.tr-auth-footer {
+  margin-top: 16px;
+  text-align: center;
+  color: var(--texto-suave);
+  font-size: 14px;
+}
+
+.app-loading-state,
+.app-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 40px 16px;
+  color: var(--texto-suave);
+  text-align: center;
+}
+
+/* ─── Quasar: sin sombras, sin elevaciones, sin fondos claros ─── */
+
+.q-btn,
+.q-btn::before,
+.q-card,
+.q-menu,
+.q-table__card,
+.q-notification,
+.q-banner,
+[class*='shadow-'] {
+  box-shadow: none !important;
+}
+
+.q-card {
+  background: var(--noche-2);
+  color: var(--texto);
+  border: 1px solid var(--linea);
+  border-radius: var(--radio-panel);
+}
+
+.q-menu {
+  background: var(--noche-3);
+  color: var(--texto);
+  border: 1px solid var(--linea);
+  border-radius: var(--radio-boton);
+}
+
+.q-item { color: var(--texto); }
+.q-item.q-router-link--active,
+.q-item--active { color: var(--celeste); }
+
+.q-dialog__backdrop { background: rgba(5, 11, 28, 0.7); }
+
+.q-separator { background: var(--linea); }
+
+/* Campos (5.2): fondo noche-0, borde línea, foco celeste */
+.q-field--outlined .q-field__control {
+  background: var(--noche-0);
+  border-radius: var(--radio-boton);
+}
+.q-field--outlined .q-field__control::before { border-color: var(--linea-control); }
+.q-field--outlined.q-field--highlighted .q-field__control::after {
+  border-color: var(--celeste);
+  border-width: 1.5px;
+  box-shadow: var(--glow-celeste-1);
+}
+.q-field--error.q-field--outlined .q-field__control::after { border-color: var(--rojo); box-shadow: none; }
+.q-field__label { color: var(--texto-suave); }
+.q-field--highlighted .q-field__label { color: var(--celeste); }
+.q-field__native,
+.q-field__input,
+.q-field__prefix,
+.q-field__suffix { color: var(--texto); }
+.q-field__messages { color: var(--texto-suave); }
+.q-field--error .q-field__messages { color: var(--rojo); }
+.q-field__bottom { padding-top: 6px; }
+
+/* Casillas: tilde celeste */
+.q-checkbox__inner { color: var(--texto-suave); }
+.q-checkbox__inner--truthy { color: var(--celeste); }
+.q-checkbox__label { color: var(--texto); }
+
+/* Tablas (10.8): separadores finos y filas sin recuadro */
+.q-table__card,
+.q-table__container { background: transparent; color: var(--texto); }
+.q-table thead th { color: var(--texto-suave); font-weight: 600; font-size: 13px; }
+.q-table tbody td { font-size: 14px; }
+.q-table tbody td,
+.q-table thead th,
+.q-table__bottom { border-color: var(--linea); }
+
+/* Avisos (5.2): panel noche-3 con borde del color de su significado */
+.q-notification {
+  background: var(--noche-3) !important;
+  color: var(--texto) !important;
+  border: 1px solid var(--linea);
+  border-radius: var(--radio-boton);
+  font-family: var(--fuente-texto);
+}
+.q-notification.bg-positive { border-color: var(--verde); }
+.q-notification.bg-negative { border-color: var(--rojo); }
+.q-notification.bg-warning { border-color: var(--ambar); }
+.q-notification.bg-info { border-color: var(--celeste); }
+.q-notification .q-icon { color: inherit; }
+.q-notification.bg-positive .q-notification__icon { color: var(--verde); }
+.q-notification.bg-negative .q-notification__icon { color: var(--rojo); }
+.q-notification.bg-warning .q-notification__icon { color: var(--ambar); }
+.q-notification.bg-info .q-notification__icon { color: var(--celeste); }
+
+/* Barras de progreso y anillos de carga en celeste */
+.q-linear-progress { color: var(--celeste); }
+.q-spinner { color: var(--celeste); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 120ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 120ms !important;
+  }
+}
+
+/* Error de un campo (5.2): mensaje debajo con ícono */
+.q-field--error .q-field__messages > div {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+.q-field--error .q-field__messages > div::before {
+  content: '';
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+  margin-top: 2px;
+  background: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpath d='M12 8v4M12 16h.01'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpath d='M12 8v4M12 16h.01'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+/* Botón de ícono dentro de un campo (mostrar contraseña): 44 × 44 táctil */
+.nz-campo-boton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  margin-right: -8px;
+  border: 0;
+  border-radius: var(--radio-boton);
+  background: transparent;
+  color: var(--texto-suave);
+  cursor: pointer;
+}
+.nz-campo-boton:hover { color: var(--texto); }
+
+/* Montos de fichas (10.6): ver utils/format.js#amountToneClass */
+.nz-monto--oro { color: var(--oro); }
+.nz-monto--verde { color: var(--verde); }
+.nz-monto--texto { color: var(--texto); }
+.nz-monto--suave { color: var(--texto-suave); }
+
+/* Anillo de espera (10.4 y 6.9): aro celeste con un segmento brillante que gira; fijo con movimiento reducido */
+.nz-anillo {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 3px solid rgba(94, 200, 255, 0.2);
+  border-top-color: var(--celeste-vivo);
+  filter: drop-shadow(0 0 6px rgba(94, 200, 255, 0.55));
+  animation: nz-giro 1.1s linear infinite;
+}
+.nz-anillo--chico { width: 20px; height: 20px; border-width: 2px; }
+
+@keyframes nz-giro { to { transform: rotate(360deg); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .nz-anillo { animation: none; }
+}

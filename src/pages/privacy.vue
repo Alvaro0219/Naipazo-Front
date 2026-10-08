@@ -49,7 +49,7 @@
       </p>
     </section>
 
-    <q-btn flat no-caps color="primary" icon="arrow_back" label="Volver" class="self-start" @click="goBack" />
+    <NzBoton variante="texto" icono="volver" label="Volver" class="self-start" @click="goBack" />
   </div>
 </template>
 
@@ -68,7 +68,7 @@ function goBack() {
 .tr-terms p,
 .tr-terms li {
   margin: 0 0 8px;
-  color: #334155;
+  color: var(--texto);
   line-height: 1.55;
 }
 

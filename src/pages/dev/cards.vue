@@ -1,5 +1,4 @@
 <template>
-  <!-- Hoja de contacto de las 40 cartas (EXACTITUD_DEL_JUEGO.md, F-01). Solo existe en desarrollo: /dev/cartas -->
   <main class="tr-contact">
     <h1>Las 40 cartas</h1>
     <section v-for="suit in SUITS" :key="suit" class="tr-contact__suit">
@@ -15,6 +14,7 @@
 </template>
 
 <script setup>
+// Hoja de contacto de las 40 cartas (EXACTITUD_DEL_JUEGO.md, F-01). Solo existe en desarrollo: /dev/cartas
 import PlayingCard from '../../components/game/PlayingCard.vue';
 import { cardLabel } from '../../utils/cards.js';
 
@@ -26,8 +26,8 @@ const NUMBERS = [1, 2, 3, 4, 5, 6, 7, 10, 11, 12];
 .tr-contact {
   min-height: 100vh;
   padding: 16px;
-  background: #14532d;
-  color: #fff;
+  background: var(--noche-1);
+  color: var(--texto);
 }
 
 .tr-contact h1 { margin: 0 0 12px; font-size: 1.3rem; }

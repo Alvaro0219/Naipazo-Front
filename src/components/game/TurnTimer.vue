@@ -38,7 +38,7 @@ const urgent = computed(() => seconds.value <= 10);
   flex: 1;
   height: 6px;
   border-radius: 999px;
-  background: rgba(0, 0, 0, 0.3);
+  background: var(--noche-0);
   overflow: hidden;
 }
 
@@ -46,22 +46,22 @@ const urgent = computed(() => seconds.value <= 10);
   display: block;
   height: 100%;
   border-radius: inherit;
-  background: rgba(255, 255, 255, 0.55);
+  background: rgba(234, 243, 255, 0.6);
   transition: width 0.25s linear;
 }
 
-.tr-timer--mine .tr-timer__bar span { background: #fde047; }
-.tr-timer--urgent .tr-timer__bar span { background: #f87171; }
+.tr-timer--mine .tr-timer__bar span { background: var(--celeste); }
+.tr-timer--urgent .tr-timer__bar span { background: var(--ambar); }
 
 .tr-timer__label {
   min-width: 34px;
   font-size: 0.8rem;
   font-weight: 700;
   text-align: right;
-  color: rgba(255, 255, 255, 0.85);
+  color: var(--texto);
 }
 
-.tr-timer--urgent .tr-timer__label { color: #fecaca; }
+.tr-timer--urgent .tr-timer__label { color: var(--ambar); }
 
 @media (prefers-reduced-motion: reduce) {
   .tr-timer__bar span { transition: none; }

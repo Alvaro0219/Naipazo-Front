@@ -8,17 +8,17 @@
           Solo informa: no bloquea nada.
         </p>
       </div>
-      <q-btn flat round icon="refresh" aria-label="Actualizar" :loading="loading" @click="load" />
+      <NzBoton variante="texto" solo-icono icono="actualizar" label="Actualizar" :loading="loading" @click="load" />
     </header>
 
-    <LoadingState :loading="loading && !items.length" :empty="!loading && !items.length" empty-label="No hay pares sospechosos." empty-icon="verified_user">
+    <LoadingState :loading="loading && !items.length" :empty="!loading && !items.length" empty-label="No hay pares sospechosos." empty-icon="seguro">
       <ul class="tr-flows__list">
         <li v-for="f in items" :key="`${f.receiver.id}-${f.giver.id}`" class="tr-flows__item" :class="{ 'tr-flows__item--alert': f.oneDirection }">
           <div class="tr-flows__pair">
             <strong>{{ f.giver.username }}</strong>
-            <q-icon name="arrow_forward" />
+            <Icono nombre="avanzar" :size="16" />
             <strong>{{ f.receiver.username }}</strong>
-            <q-badge v-if="f.oneDirection" color="negative" label="Siempre en la misma dirección" />
+            <NzChip v-if="f.oneDirection" tono="rojo" icono="alerta" label="Siempre en la misma dirección" />
           </div>
           <div class="tr-flows__meta tr-num">
             {{ f.matches }} partidas · {{ f.receiverWins }}–{{ f.giverWins }} · {{ formatChips(f.chips) }} fichas netas · última {{ formatDateTime(f.lastAt) }}
@@ -73,7 +73,7 @@ onMounted(load);
 
 .tr-flows__header p {
   margin: 4px 0 0;
-  color: #64748b;
+  color: var(--texto-suave);
   font-size: 0.9rem;
 }
 
@@ -89,12 +89,11 @@ onMounted(load);
 .tr-flows__item {
   padding: 10px 12px;
   border-radius: 10px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--linea);
 }
 
 .tr-flows__item--alert {
-  border-color: #fecaca;
-  background: #fef2f2;
+  border-color: var(--rojo);
 }
 
 .tr-flows__pair {
@@ -106,7 +105,7 @@ onMounted(load);
 
 .tr-flows__meta {
   margin-top: 4px;
-  color: #64748b;
+  color: var(--texto-suave);
   font-size: 0.85rem;
 }
 </style>

@@ -2,57 +2,48 @@
   <div class="tr-auth-shell">
     <div class="tr-auth-card">
       <div class="tr-auth-brand">
-        <img src="/favicon.svg" alt="" />
+        <SolDeMayo :size="40" />
         <div>
           <strong>Naipazo</strong>
           <span>Entrá y jugá con tus fichas del día</span>
         </div>
       </div>
 
-      <q-banner v-if="reasonMessage" dense rounded class="bg-amber-1 text-brown-9 q-mb-md">
-        <template #avatar><q-icon name="schedule" color="warning" /></template>
-        {{ reasonMessage }}
-      </q-banner>
+      <NzPanel v-if="reasonMessage" elevado class="tr-auth-aviso" role="status">
+        <Icono nombre="reloj" :size="18" />
+        <span>{{ reasonMessage }}</span>
+      </NzPanel>
 
-      <q-form ref="formRef" class="column q-gutter-y-sm" greedy @submit.prevent="handleSubmit">
-        <q-input
+      <q-form ref="formRef" class="column q-gutter-y-md" greedy @submit.prevent="handleSubmit">
+        <NzCampo
           v-model="form.identifier"
           label="Email o nombre de usuario"
-          outlined
           autocomplete="username"
           autocapitalize="off"
           :rules="[rules.required('El email o nombre de usuario')]"
           lazy-rules
         />
-        <q-input
+        <NzCampo
           v-model="form.password"
           label="Contraseña"
-          outlined
           :type="showPassword ? 'text' : 'password'"
           autocomplete="current-password"
           :rules="[rules.required('La contraseña')]"
           lazy-rules
         >
           <template #append>
-            <q-icon
-              :name="showPassword ? 'visibility_off' : 'visibility'"
-              class="cursor-pointer"
+            <button
+              type="button"
+              class="nz-campo-boton"
               :aria-label="showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'"
               @click="showPassword = !showPassword"
-            />
+            >
+              <Icono :nombre="showPassword ? 'ocultar' : 'ver'" />
+            </button>
           </template>
-        </q-input>
+        </NzCampo>
 
-        <q-btn
-          type="submit"
-          color="primary"
-          size="lg"
-          unelevated
-          no-caps
-          label="Entrar"
-          :loading="loading"
-          class="full-width"
-        />
+        <NzBoton type="submit" variante="principal" tamano="lg" bloque label="Entrar" :loading="loading" />
       </q-form>
 
       <div class="tr-auth-forgot">
@@ -111,6 +102,19 @@ async function handleSubmit() {
 .tr-auth-forgot {
   margin-top: 12px;
   text-align: center;
-  font-size: 0.9rem;
+  font-size: 14px;
 }
+
+.tr-auth-aviso {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+  padding: 12px 14px;
+  border-color: var(--celeste);
+  color: var(--texto);
+  font-size: 14px;
+}
+
+.tr-auth-aviso :deep(.nz-icono) { color: var(--celeste); }
 </style>

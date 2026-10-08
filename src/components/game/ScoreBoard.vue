@@ -36,10 +36,11 @@ const rows = computed(() => [props.myTeam, 1 - props.myTeam].map((team) => ({
   gap: 2px;
   min-width: 128px;
   padding: 6px 10px;
-  border-radius: 10px;
-  background: rgba(0, 0, 0, 0.25);
-  color: #fff;
-  font-size: 0.85rem;
+  border-radius: var(--radio-boton);
+  background: var(--noche-2);
+  border: 1px solid var(--linea);
+  color: var(--texto);
+  font-size: 14px;
 }
 
 .tr-score__row {
@@ -54,26 +55,26 @@ const rows = computed(() => [props.myTeam, 1 - props.myTeam].map((team) => ({
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  color: rgba(255, 255, 255, 0.8);
+  color: var(--texto-suave);
 }
 
-.tr-score__row--me .tr-score__name { color: #fef9c3; font-weight: 700; }
+.tr-score__row--me .tr-score__name { color: var(--texto); font-weight: 700; }
 
 .tr-score__points {
-  font-size: 1.1rem;
-  font-weight: 800;
+  font-family: var(--fuente-titulo);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--celeste-vivo);
 }
 
 .tr-score__section {
-  font-size: 0.65rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: rgba(255, 255, 255, 0.65);
+  font-size: 12px;
+  color: var(--texto-suave);
 }
 
 .tr-score__target {
-  font-size: 0.7rem;
-  color: rgba(255, 255, 255, 0.6);
+  font-size: 12px;
+  color: var(--texto-suave);
   text-align: right;
 }
 </style>

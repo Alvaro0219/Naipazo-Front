@@ -1,59 +1,59 @@
 <template>
   <div class="tr-shell">
     <aside class="tr-sidebar">
-      <router-link to="/" class="tr-brand">
-        <img src="/favicon.svg" alt="" />
+      <router-link to="/" class="tr-brand" aria-label="Naipazo, ir a Partidas">
+        <SolDeMayo :size="32" />
         <span>Naipazo</span>
       </router-link>
 
-      <BalanceChip dark class="tr-sidebar__balance" />
+      <BalanceChip class="tr-sidebar__balance" />
 
-      <nav class="tr-nav">
+      <nav class="tr-nav" aria-label="Secciones">
         <router-link
           v-for="item in sidebarItems"
           :key="item.path"
           :to="item.path"
           class="tr-nav-link"
           :class="{ active: isActive(item.path) }"
+          :aria-current="isActive(item.path) ? 'page' : undefined"
         >
-          <q-icon :name="item.icon" size="20px" />
+          <Icono :nombre="item.icon" :size="20" />
           <span>{{ item.label }}</span>
         </router-link>
       </nav>
 
       <div class="tr-sidebar__user">
         <div class="tr-sidebar__username">
-          <q-icon name="person" size="18px" />
+          <Avatar :nombre="auth.user?.username || ''" :size="32" />
           <span>{{ auth.user?.username }}</span>
         </div>
-        <q-btn flat dense no-caps icon="logout" label="Salir" color="white" @click="handleLogout" />
+        <NzBoton variante="texto" icono="salir" label="Salir" tamano="sm" @click="handleLogout" />
       </div>
     </aside>
 
     <div class="tr-main">
       <header class="tr-mobile-header">
-        <router-link to="/" class="tr-brand tr-brand--mobile">
-          <img src="/favicon.svg" alt="" />
+        <router-link to="/" class="tr-brand tr-brand--mobile" aria-label="Naipazo, ir a Partidas">
+          <SolDeMayo :size="28" />
           <span>Naipazo</span>
         </router-link>
-        <div class="tr-mobile-header__right">
-          <BalanceChip dark />
-        </div>
+        <BalanceChip />
       </header>
 
       <main class="tr-content">
         <router-view />
       </main>
 
-      <nav v-if="$q.screen.lt.md" class="tr-mobile-tabs">
+      <nav v-if="$q.screen.lt.md" class="tr-mobile-tabs" aria-label="Secciones">
         <router-link
           v-for="item in mobileItems"
           :key="item.path"
           :to="item.path"
           class="tr-mobile-tab"
           :class="{ active: isActive(item.path) }"
+          :aria-current="isActive(item.path) ? 'page' : undefined"
         >
-          <q-icon :name="item.icon" size="22px" />
+          <Icono :nombre="item.icon" :size="22" />
           <span>{{ item.label }}</span>
         </router-link>
       </nav>
@@ -77,16 +77,16 @@ const auth = useAuthStore();
 const wallet = useWalletStore();
 
 const navItems = [
-  { path: '/', label: 'Partidas', icon: 'style' },
-  { path: '/historial', label: 'Historial', icon: 'history' },
-  { path: '/ranking', label: 'Ranking', icon: 'emoji_events' },
-  { path: '/billetera', label: 'Billetera', icon: 'account_balance_wallet' },
-  { path: '/perfil', label: 'Perfil', icon: 'person' }
+  { path: '/', label: 'Partidas', icon: 'naipes' },
+  { path: '/historial', label: 'Historial', icon: 'historial' },
+  { path: '/ranking', label: 'Ranking', icon: 'medalla' },
+  { path: '/billetera', label: 'Billetera', icon: 'billetera' },
+  { path: '/perfil', label: 'Perfil', icon: 'perfil' }
 ];
 
 // El panel de admin solo va en la barra lateral (en el celular se entra desde Perfil).
 const sidebarItems = computed(() => (auth.isAdmin
-  ? [...navItems, { path: '/admin', label: 'Admin', icon: 'admin_panel_settings' }]
+  ? [...navItems, { path: '/admin', label: 'Admin', icon: 'admin' }]
   : navItems));
 const mobileItems = navItems;
 
@@ -139,9 +139,7 @@ onMounted(async () => {
   min-height: 100%;
 }
 
-.tr-sidebar {
-  display: none;
-}
+.tr-sidebar { display: none; }
 
 .tr-main {
   flex: 1;
@@ -154,15 +152,18 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   gap: 10px;
-  color: #fff;
+  min-height: 44px;
+  color: var(--texto);
+  font-family: var(--fuente-titulo);
   font-weight: 700;
-  font-size: 1.1rem;
+  font-size: 20px;
+  letter-spacing: -0.01em;
   text-decoration: none;
 }
 
-.tr-brand img { width: 34px; height: 34px; }
-.tr-brand--mobile img { width: 30px; height: 30px; }
+.tr-brand:hover { color: var(--texto); }
 
+/* Encabezado (5.2): noche-0, el sol y Naipazo a la izquierda, el saldo con la ficha a la derecha */
 .tr-mobile-header {
   position: sticky;
   top: 0;
@@ -171,22 +172,19 @@ onMounted(async () => {
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  padding: 10px 12px 10px 16px;
-  padding-top: max(10px, env(safe-area-inset-top));
-  background: #14532d;
-}
-
-.tr-mobile-header__right {
-  display: flex;
-  align-items: center;
-  gap: 4px;
+  padding: 8px 12px 8px 16px;
+  padding-top: max(8px, env(safe-area-inset-top));
+  background: var(--noche-0);
+  border-bottom: 1px solid var(--linea);
 }
 
 .tr-content {
   flex: 1;
-  padding-bottom: 72px; /* espacio para las tabs inferiores */
+  /* Espacio para la navegación inferior (64 px + área segura) */
+  padding-bottom: calc(80px + env(safe-area-inset-bottom));
 }
 
+/* Navegación inferior (5.2): noche-0, línea arriba; el activo en celeste con un punto luminoso */
 .tr-mobile-tabs {
   position: fixed;
   left: 0;
@@ -194,27 +192,39 @@ onMounted(async () => {
   bottom: 0;
   z-index: 10;
   display: flex;
-  background: #fff;
-  border-top: 1px solid #e2e8f0;
+  background: var(--noche-0);
+  border-top: 1px solid var(--linea);
   padding-bottom: env(safe-area-inset-bottom);
 }
 
 .tr-mobile-tab {
+  position: relative;
   flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
-  padding: 8px 0 10px;
-  min-height: 56px;
-  color: #64748b;
-  font-size: 0.7rem;
+  justify-content: center;
+  gap: 3px;
+  min-height: 64px;
+  min-width: 0;
+  color: var(--texto-suave);
+  font-size: 12px;
   font-weight: 600;
   text-decoration: none;
-  min-width: 0;
 }
 
-.tr-mobile-tab.active { color: #166534; }
+.tr-mobile-tab.active { color: var(--celeste); }
+
+.tr-mobile-tab.active::before {
+  content: '';
+  position: absolute;
+  top: 5px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--celeste-vivo);
+  box-shadow: var(--glow-celeste-1);
+}
 
 @media (min-width: 1024px) {
   .tr-sidebar {
@@ -227,8 +237,8 @@ onMounted(async () => {
     flex-direction: column;
     gap: 20px;
     padding: 20px 14px;
-    background: #14532d;
-    color: #fff;
+    background: var(--noche-0);
+    border-right: 1px solid var(--linea);
   }
 
   .tr-sidebar__balance { align-self: flex-start; }
@@ -240,21 +250,31 @@ onMounted(async () => {
   }
 
   .tr-nav-link {
+    position: relative;
     display: flex;
     align-items: center;
     gap: 12px;
+    min-height: 44px;
     padding: 10px 12px;
-    border-radius: 10px;
-    color: rgba(255, 255, 255, 0.8);
+    border-radius: var(--radio-boton);
+    color: var(--texto-suave);
     font-weight: 600;
     text-decoration: none;
   }
 
-  .tr-nav-link:hover { background: rgba(255, 255, 255, 0.08); }
+  .tr-nav-link:hover { color: var(--texto); background: rgba(143, 167, 207, 0.08); }
 
-  .tr-nav-link.active {
-    background: rgba(255, 255, 255, 0.14);
-    color: #fff;
+  .tr-nav-link.active { color: var(--celeste); background: var(--noche-2); }
+
+  .tr-nav-link.active::before {
+    content: '';
+    position: absolute;
+    left: 2px;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--celeste-vivo);
+    box-shadow: var(--glow-celeste-1);
   }
 
   .tr-sidebar__user {
@@ -264,13 +284,13 @@ onMounted(async () => {
     justify-content: space-between;
     gap: 8px;
     padding-top: 14px;
-    border-top: 1px solid rgba(255, 255, 255, 0.15);
+    border-top: 1px solid var(--linea);
   }
 
   .tr-sidebar__username {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
     min-width: 0;
     font-weight: 600;
   }

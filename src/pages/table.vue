@@ -1,20 +1,18 @@
 <template>
   <div class="tr-table">
     <header class="tr-table__header">
-      <q-btn flat round dense icon="arrow_back" color="white" aria-label="Volver al lobby" @click="goLobby" />
+      <NzBoton variante="texto" solo-icono icono="volver" label="Volver al lobby" @click="goLobby" />
       <div class="tr-table__title">
         <strong>{{ tournamentInfo ? tournamentInfo.roundName : `Mesa ${game.room?.code || ''}` }}</strong>
         <span v-if="tournamentInfo">Torneo {{ tournamentInfo.code }} · {{ game.room?.config.targetPoints }} puntos</span>
-        <span v-else-if="game.room">{{ game.room.config.isPrivate ? 'Sala privada · ' : '' }}{{ game.is2v2 ? '2 vs 2 · ' : '' }}{{ game.room.config.targetPoints }} puntos · sin flor · {{ betLabel }}</span>
+        <span v-else-if="game.room">{{ game.room.config.isPrivate ? 'Sala privada · ' : '' }}{{ game.is2v2 ? '2 vs 2 · ' : '' }}{{ game.room.config.targetPoints }} puntos · {{ betLabel }}</span>
       </div>
-      <q-btn
+      <NzBoton
         v-if="game.view && !game.finished"
-        flat
-        round
-        dense
-        icon="flag"
-        color="white"
-        aria-label="Abandonar la partida"
+        variante="texto"
+        solo-icono
+        icono="bandera"
+        label="Abandonar la partida"
         @click="confirmAbandon"
       />
       <ScoreBoard
@@ -38,10 +36,10 @@
     <main class="tr-table__main">
       <!-- Otra pestaña tomó la partida -->
       <div v-if="game.replaced" class="tr-table__center">
-        <q-icon name="tab" size="48px" />
+        <Icono nombre="pestana" :size="48" />
         <h2>Abriste esta mesa en otra pestaña</h2>
         <p>Para seguir jugando acá, volvé a tomar la mesa.</p>
-        <q-btn color="accent" text-color="dark" unelevated no-caps label="Jugar en esta pestaña" @click="retake" />
+        <NzBoton variante="principal" label="Jugar en esta pestaña" @click="retake" />
       </div>
 
       <!-- Sala en espera 2 vs 2: asientos por pareja (los libres se tocan para cambiarse) -->
@@ -67,59 +65,52 @@
               @click="moveTo(seatNo)"
             >
               {{ seatUser(seatNo) ? (seatUser(seatNo).userId === auth.user?.id ? 'Vos' : seatUser(seatNo).username) : 'Libre' }}
-              <q-icon v-if="seatUser(seatNo) && isReady(seatUser(seatNo).userId)" name="check_circle" color="positive" size="16px" aria-label="Listo" />
+              <Icono v-if="seatUser(seatNo) && isReady(seatUser(seatNo).userId)" nombre="ok" :size="16" label="Listo" class="tr-wait4__listo" />
             </button>
           </div>
         </div>
         <div class="tr-table__code tr-num">{{ game.room.code }}</div>
-        <q-btn
+        <NzBoton
           v-if="game.room.config.isPrivate"
-          flat
-          color="white"
-          no-caps
-          :icon="copied ? 'check' : 'content_copy'"
+          variante="secundario"
+          :icono="copied ? 'tilde' : 'copiar'"
           :label="copied ? 'Código copiado' : 'Copiar código'"
           @click="copyCode"
         />
-        <q-btn
+        <NzBoton
           v-if="game.room.seats.length === 4"
-          color="accent"
-          text-color="dark"
-          unelevated
-          no-caps
-          :icon="isReady(auth.user?.id) ? 'check' : 'thumb_up'"
+          variante="principal"
+          :icono="isReady(auth.user?.id) ? 'tilde' : 'listo'"
           :label="isReady(auth.user?.id) ? 'Listo · esperando a los demás' : 'Estoy listo'"
           :disable="isReady(auth.user?.id)"
           :loading="confirming"
           @click="handleReady"
         />
-        <q-btn outline color="white" no-caps label="Salir de la mesa" :loading="cancelling" @click="handleLeave" />
+        <NzBoton variante="secundario" tono="rojo" label="Salir de la mesa" :loading="cancelling" @click="handleLeave" />
       </div>
 
       <!-- Sala en espera -->
       <div v-else-if="game.room?.status === 'waiting'" class="tr-table__center">
-        <q-spinner-dots size="48px" color="accent" />
+        <div class="nz-anillo" aria-hidden="true" />
         <h2>Esperando un rival…</h2>
         <p v-if="game.room.config.isPrivate">Sala privada: pasale este código a quien quieras que juegue.</p>
         <p v-else>Tu mesa ya aparece en el lobby con este código:</p>
         <div class="tr-table__code tr-num">{{ game.room.code }}</div>
-        <q-btn
+        <NzBoton
           v-if="game.room.config.isPrivate"
-          flat
-          color="white"
-          no-caps
-          :icon="copied ? 'check' : 'content_copy'"
+          variante="secundario"
+          :icono="copied ? 'tilde' : 'copiar'"
           :label="copied ? 'Código copiado' : 'Copiar código'"
           @click="copyCode"
         />
-        <q-btn outline color="white" no-caps label="Cancelar mesa" :loading="cancelling" @click="handleCancel" />
+        <NzBoton variante="secundario" tono="rojo" label="Cancelar mesa" :loading="cancelling" @click="handleCancel" />
       </div>
 
       <div v-else-if="game.room?.status === 'cancelled'" class="tr-table__center">
-        <q-icon name="block" size="48px" />
+        <Icono nombre="bloqueado" :size="48" />
         <h2>{{ game.room.cancelReason === 'expired' ? 'La mesa venció' : 'La mesa se canceló' }}</h2>
         <p v-if="game.room.cancelReason === 'expired'">Pasó mucho tiempo sin que se sumara un rival. Podés crear otra cuando quieras.</p>
-        <q-btn color="accent" text-color="dark" unelevated no-caps label="Volver al lobby" @click="goLobby" />
+        <NzBoton variante="principal" label="Volver al lobby" @click="goLobby" />
       </div>
 
       <TableBoard2v2
@@ -149,7 +140,7 @@
       />
 
       <div v-else class="tr-table__center">
-        <q-spinner size="40px" color="accent" />
+        <div class="nz-anillo" aria-hidden="true" />
         <p>Entrando a la mesa…</p>
       </div>
     </main>
@@ -158,12 +149,12 @@
     <q-dialog :model-value="Boolean(game.frozen)" persistent>
       <q-card class="tr-result">
         <q-card-section class="tr-result__body">
-          <q-icon name="pause_circle" size="56px" color="grey-6" />
+          <Icono nombre="pausa" :size="56" class="tr-result__icono" />
           <h2>Partida suspendida</h2>
           <p class="tr-result__reason" role="alert">{{ game.frozen?.message }}</p>
         </q-card-section>
         <q-card-actions align="center">
-          <q-btn color="primary" unelevated no-caps label="Volver al lobby" @click="leaveAfterMatch" />
+          <NzBoton variante="principal" label="Volver al lobby" @click="leaveAfterMatch" />
         </q-card-actions>
       </q-card>
     </q-dialog>
@@ -171,7 +162,8 @@
     <q-dialog :model-value="Boolean(game.finished)" persistent>
       <q-card class="tr-result">
         <q-card-section class="tr-result__body">
-          <q-icon :name="iWon ? 'emoji_events' : 'sentiment_dissatisfied'" size="56px" :color="iWon ? 'accent' : 'grey-6'" />
+          <SolDeMayo v-if="iWon" :size="72" color="oro" />
+          <Icono v-else nombre="bandera" :size="48" class="tr-result__icono" />
           <h2>{{ resultTitle }}</h2>
           <p v-if="reasonText" class="tr-result__reason">{{ reasonText }}</p>
           <p v-if="myResult === 'loss' && game.finished?.endReason === 'abandon'" class="tr-result__reason">Abandonó tu compañero: pierden los dos.</p>
@@ -191,35 +183,27 @@
         <q-card-section v-else-if="game.finished?.rematchAllowed" class="tr-result__rematch">
           <p v-if="rematchText" class="tr-result__rematch-text" role="status">{{ rematchText }}</p>
           <div class="tr-result__rematch-actions">
-            <q-btn
+            <NzBoton
               v-if="!rematchClosed"
-              color="accent"
-              text-color="dark"
-              unelevated
-              no-caps
-              icon="replay"
+              variante="principal"
+              icono="revancha"
               :label="rematchRequestedByRival ? 'Aceptar revancha' : 'Revancha'"
               :loading="game.rematch?.state === 'waiting'"
               @click="game.requestRematch()"
             />
-            <q-btn v-if="rematchRequestedByRival" flat no-caps label="No, gracias" @click="game.declineRematch()" />
+            <NzBoton v-if="rematchRequestedByRival" variante="texto" label="No, gracias" @click="game.declineRematch()" />
           </div>
         </q-card-section>
 
         <q-card-actions align="center">
-          <q-btn
+          <NzBoton
             v-if="game.finished?.tournamentId"
-            color="primary"
-            unelevated
-            no-caps
+            variante="principal"
             label="Ver el torneo"
             :to="`/torneos/${game.finished.tournamentId}`"
           />
-          <q-btn
-            color="primary"
-            :flat="Boolean(game.finished?.tournamentId)"
-            :unelevated="!game.finished?.tournamentId"
-            no-caps
+          <NzBoton
+            :variante="game.finished?.tournamentId ? 'texto' : 'secundario'"
             label="Volver al lobby"
             @click="leaveAfterMatch"
           />
@@ -237,6 +221,7 @@ import ConnectionBanner from '../components/game/ConnectionBanner.vue';
 import ScoreBoard from '../components/game/ScoreBoard.vue';
 import TableBoard from '../components/game/TableBoard.vue';
 import TableBoard2v2 from '../components/game/TableBoard2v2.vue';
+import { confirmar } from '../composables/useConfirmar.js';
 import { useSocket } from '../composables/useSocket.js';
 import { cancelRoom, changeSeat, confirmReady, fetchTournament, leaveRoom } from '../services/api.js';
 import { useAuthStore } from '../stores/auth.js';
@@ -352,7 +337,7 @@ function handleAction(type) {
     game.sendAction(type);
     return;
   }
-  $q.dialog({
+  confirmar({
     title: '¿Te vas al mazo?',
     message: game.is2v2
       ? 'El mazo es de la pareja: los rivales se llevan los puntos en juego de esta mano.'
@@ -364,7 +349,7 @@ function handleAction(type) {
 
 function confirmAbandon() {
   const bet = game.room?.config?.bet;
-  $q.dialog({
+  confirmar({
     title: '¿Abandonar la partida?',
     message: game.is2v2
       ? (bet
@@ -440,8 +425,7 @@ watch(() => route.params.roomId, (id) => id && game.enterRoom(id));
   min-height: 100%;
   display: flex;
   flex-direction: column;
-  background: #14532d;
-  color: #fff;
+  color: var(--texto);
 }
 
 .tr-table__header {
@@ -450,7 +434,8 @@ watch(() => route.params.roomId, (id) => id && game.enterRoom(id));
   gap: 10px;
   padding: 10px 12px;
   padding-top: max(10px, env(safe-area-inset-top));
-  background: #0f3d22;
+  background: var(--noche-0);
+  border-bottom: 1px solid var(--linea);
 }
 
 .tr-table__title {
@@ -462,8 +447,8 @@ watch(() => route.params.roomId, (id) => id && game.enterRoom(id));
 }
 
 .tr-table__title span {
-  font-size: 0.75rem;
-  color: rgba(255, 255, 255, 0.7);
+  font-size: 12px;
+  color: var(--texto-suave);
 }
 
 .tr-table__main {
@@ -485,22 +470,22 @@ watch(() => route.params.roomId, (id) => id && game.enterRoom(id));
 
 .tr-table__center h2 {
   margin: 0;
-  font-size: 1.3rem;
+  font-size: 20px;
   font-weight: 700;
   line-height: 1.3;
 }
 
 .tr-table__center p {
   margin: 0;
-  color: rgba(255, 255, 255, 0.8);
+  color: var(--texto-suave);
 }
 
+/* Código de la sala en Bricolage 40 px con espaciado amplio (10.4) */
 .tr-table__code {
   padding: 8px 18px;
-  border-radius: 10px;
-  background: rgba(0, 0, 0, 0.25);
-  font-size: 1.8rem;
-  font-weight: 800;
+  font-family: var(--fuente-titulo);
+  font-size: 40px;
+  font-weight: 700;
   letter-spacing: 0.2em;
 }
 
@@ -521,17 +506,17 @@ watch(() => route.params.roomId, (id) => id && game.enterRoom(id));
 
 .tr-wait4__team-name {
   font-weight: 700;
-  font-size: 0.85rem;
+  font-size: 14px;
   text-align: left;
 }
 
 .tr-wait4__seat {
   min-height: 44px;
   padding: 6px 8px;
-  border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  background: rgba(0, 0, 0, 0.25);
-  color: #fff;
+  border-radius: var(--radio-boton);
+  border: 1px solid var(--linea-control);
+  background: var(--noche-2);
+  color: var(--texto);
   font: inherit;
   font-weight: 600;
   overflow: hidden;
@@ -541,19 +526,20 @@ watch(() => route.params.roomId, (id) => id && game.enterRoom(id));
 
 .tr-wait4__seat--free {
   border-style: dashed;
-  color: #fde68a;
+  color: var(--celeste);
   cursor: pointer;
 }
 
-.tr-wait4__seat--me { border-color: #fde047; background: rgba(253, 224, 71, 0.15); }
-.tr-wait4__seat:disabled { cursor: default; color: #fff; opacity: 1; }
+.tr-wait4__seat--me { border-color: var(--celeste); background: var(--noche-3); }
+.tr-wait4__seat:disabled { cursor: default; color: var(--texto); opacity: 1; }
+.tr-wait4__listo { color: var(--verde); }
 
 .tr-result { width: min(92vw, 360px); }
 
 .tr-result__next {
   padding-top: 0;
   text-align: center;
-  color: #475569;
+  color: var(--texto-suave);
   font-weight: 600;
 }
 
@@ -567,8 +553,8 @@ watch(() => route.params.roomId, (id) => id && game.enterRoom(id));
 
 .tr-result__rematch-text {
   margin: 0;
-  color: #475569;
-  font-size: 0.9rem;
+  color: var(--texto-suave);
+  font-size: 14px;
   text-align: center;
 }
 
@@ -589,30 +575,32 @@ watch(() => route.params.roomId, (id) => id && game.enterRoom(id));
 
 .tr-result__body h2 {
   margin: 0;
-  font-size: 1.3rem;
-  font-weight: 800;
+  font-size: 24px;
+  font-weight: 700;
   line-height: 1.3;
 }
 
 .tr-result__body p {
   margin: 0;
-  color: #475569;
-  font-size: 1.05rem;
+  color: var(--texto-suave);
+  font-size: 16px;
 }
 
 .tr-result__body .tr-result__reason {
-  font-size: 0.9rem;
-  color: #64748b;
+  font-size: 14px;
+  color: var(--texto-suave);
 }
 
+.tr-result__icono { color: var(--texto-suave); }
+
+/* Premio en oro; perder es neutro (9.1 y 9.2). El conteo y los rayos van en N4 */
 .tr-result__chips {
   margin-top: 6px;
-  padding: 6px 14px;
-  border-radius: 999px;
-  font-weight: 800;
-  font-size: 1.1rem;
+  font-family: var(--fuente-titulo);
+  font-weight: 700;
+  font-size: 20px;
 }
 
-.tr-result__chips--won { background: #dcfce7; color: #166534; }
-.tr-result__chips--lost { background: #fee2e2; color: #991b1b; }
+.tr-result__chips--won { color: var(--oro); }
+.tr-result__chips--lost { color: var(--texto-suave); }
 </style>

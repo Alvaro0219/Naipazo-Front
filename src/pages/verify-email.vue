@@ -2,24 +2,22 @@
   <div class="tr-auth-shell">
     <div class="tr-auth-card">
       <div class="tr-auth-brand">
-        <img src="/favicon.svg" alt="" />
+        <SolDeMayo :size="40" />
         <div>
           <strong>Verificar email</strong>
           <span>Naipazo</span>
         </div>
       </div>
 
-      <LoadingState v-if="state === 'loading'" message="Verificando tu email…" />
+      <LoadingState v-if="state === 'loading'" loading label="Verificando tu email…" :skeleton-rows="1" />
 
-      <q-banner v-else-if="state === 'ok'" rounded class="bg-green-1 text-green-10" role="status">
-        <template #avatar><q-icon name="verified" color="positive" /></template>
+      <NzAviso v-else-if="state === 'ok'" tono="verde" icono="verificado">
         ¡Listo! Tu email quedó verificado. Desde ahora recibís tus fichas diarias.
-      </q-banner>
+      </NzAviso>
 
-      <q-banner v-else rounded class="bg-red-1 text-red-10" role="alert">
-        <template #avatar><q-icon name="error_outline" color="negative" /></template>
+      <NzAviso v-else tono="rojo">
         {{ errorMessage }}
-      </q-banner>
+      </NzAviso>
 
       <div class="tr-auth-footer">
         <router-link :to="auth.isAuthenticated ? '/' : '/login'">

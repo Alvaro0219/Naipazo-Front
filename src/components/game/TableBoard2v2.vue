@@ -58,12 +58,10 @@
       <PlayerHand :cards="hand?.myCards || []" :can-play="canPlay" @play="$emit('play', $event)" />
       <div class="tr-b4__actions">
         <ActionBar :available="buttonActions" :disabled="sending" @action="$emit('action', $event)" />
-        <q-btn
+        <NzBoton
           v-if="view.phase === 'playing'"
-          outline
-          color="white"
-          no-caps
-          icon="back_hand"
+          variante="secundario"
+          icono="mano"
           label="Señas"
           class="tr-b4__signs-btn"
           @click="signsOpen = true"
@@ -75,25 +73,19 @@
       </div>
     </section>
 
-    <q-dialog v-model="signsOpen" position="bottom">
-      <q-card class="tr-b4__signs">
-        <q-card-section>
-          <strong>Seña para {{ partnerName }}</strong>
-          <p>Solo la ve tu compañero. No se verifica que sea cierta.</p>
-        </q-card-section>
-        <q-card-section class="tr-b4__signs-grid">
-          <q-btn
-            v-for="sign in SIGNS"
-            :key="sign"
-            no-caps
-            unelevated
-            color="primary"
-            :label="SIGN_LABELS[sign]"
-            @click="sendSign(sign)"
-          />
-        </q-card-section>
-      </q-card>
-    </q-dialog>
+    <NzHoja v-model="signsOpen" :titulo="`Seña para ${partnerName}`">
+      <p class="tr-b4__signs-nota">Solo la ve tu compañero. No se verifica que sea cierta.</p>
+      <div class="tr-b4__signs-grid">
+        <NzBoton
+          v-for="sign in SIGNS"
+          :key="sign"
+          variante="luminoso"
+          tamano="sm"
+          :label="SIGN_LABELS[sign]"
+          @click="sendSign(sign)"
+        />
+      </div>
+    </NzHoja>
   </div>
 </template>
 
@@ -225,7 +217,7 @@ const SeatTag = defineComponent({
   flex-direction: column;
   align-items: center;
   gap: 10px;
-  color: #fff;
+  color: var(--texto);
 }
 
 .tr-b4__top { position: relative; }
@@ -242,11 +234,11 @@ const SeatTag = defineComponent({
   align-items: center;
   gap: 8px;
   padding: 10px 8px;
-  border-radius: 18px;
-  background:
-    radial-gradient(ellipse at 50% 30%, rgba(255, 255, 255, 0.1), transparent 65%),
-    #15803d;
-  box-shadow: inset 0 0 0 5px #14532d, inset 0 0 0 6px rgba(202, 138, 4, 0.5);
+  /* Paño (6.4): noche-2 liso, borde celeste al 45 % con un resplandor muy suave */
+  border-radius: var(--radio-mesa);
+  background: var(--noche-2);
+  border: 1.5px solid rgba(94, 200, 255, 0.45);
+  box-shadow: var(--glow-celeste-3);
 }
 
 .tr-b4__side {
@@ -275,13 +267,13 @@ const SeatTag = defineComponent({
 .tr-badge {
   padding: 1px 7px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.15);
-  font-size: 0.66rem;
-  font-weight: 700;
-  text-transform: uppercase;
+  border: 1px solid var(--linea);
+  color: var(--texto-suave);
+  font-size: 12px;
+  font-weight: 600;
 }
 
-.tr-badge--turn { background: #fde047; color: #422006; }
+.tr-badge--turn { border-color: var(--celeste); color: var(--celeste-vivo); }
 
 .tr-b4__bazas {
   display: flex;
@@ -293,15 +285,16 @@ const SeatTag = defineComponent({
 .tr-b4__baza {
   padding: 2px 8px;
   border-radius: 999px;
-  background: rgba(0, 0, 0, 0.25);
-  font-size: 0.72rem;
-  font-weight: 700;
-  color: rgba(255, 255, 255, 0.6);
+  border: 1px solid var(--linea);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--texto-suave);
 }
 
-.tr-b4__baza--ours { color: #86efac; }
-.tr-b4__baza--theirs { color: #fca5a5; }
-.tr-b4__baza--parda { color: #fde68a; }
+/* Baza de tu equipo en oro, de ellos neutra, parda en blanco (7) */
+.tr-b4__baza--ours { border-color: var(--oro); color: var(--oro); }
+.tr-b4__baza--theirs { color: var(--texto-suave); }
+.tr-b4__baza--parda { color: var(--texto); }
 
 .tr-b4__status {
   font-weight: 700;
@@ -314,8 +307,9 @@ const SeatTag = defineComponent({
 .tr-chip {
   padding: 3px 10px;
   border-radius: 999px;
-  background: rgba(0, 0, 0, 0.25);
-  font-size: 0.75rem;
+  border: 1px solid var(--linea);
+  color: var(--texto-suave);
+  font-size: 12px;
   font-weight: 600;
 }
 
@@ -347,10 +341,10 @@ const SeatTag = defineComponent({
   justify-content: center;
   align-items: center;
   gap: 4px;
-  font-size: 0.75rem;
+  font-size: 13px;
 }
 
-.tr-b4__received-title { color: rgba(255, 255, 255, 0.75); }
+.tr-b4__received-title { color: var(--texto-suave); }
 
 .tr-b4__sign-bubble {
   position: absolute;
@@ -358,13 +352,15 @@ const SeatTag = defineComponent({
   left: 50%;
   transform: translateX(-50%);
   margin-top: 4px;
+  /* Seña recibida: símbolo luminoso (7); el ícono propio de cada seña va en N7 */
   padding: 6px 12px;
-  border-radius: 12px;
-  background: #fff;
-  color: #14532d;
-  font-weight: 800;
+  border-radius: var(--radio-boton);
+  background: var(--noche-3);
+  border: 1px solid var(--celeste);
+  color: var(--celeste-vivo);
+  font-weight: 700;
   white-space: nowrap;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--glow-celeste-2);
   z-index: 3;
 }
 
@@ -374,27 +370,24 @@ const SeatTag = defineComponent({
   left: 50%;
   transform: translate(-50%, -50%);
   padding: 8px 16px;
-  border-radius: 14px;
-  background: #fde047;
-  color: #422006;
-  font-size: 1.3rem;
-  font-weight: 900;
+  color: var(--celeste-vivo);
+  font-family: var(--fuente-titulo);
+  font-size: clamp(32px, 9vw, 52px);
+  font-weight: 800;
   white-space: nowrap;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  text-shadow: 0 0 18px rgba(94, 200, 255, 0.55);
   pointer-events: none;
   z-index: 2;
 }
 
-.tr-b4__announce--mine { background: #fff; color: #14532d; }
+.tr-b4__announce--mine { color: var(--texto); }
 
-.tr-b4__signs { width: 100%; max-width: 480px; }
-.tr-b4__signs p { margin: 4px 0 0; color: #64748b; font-size: 0.85rem; }
+.tr-b4__signs-nota { margin: 0 0 12px; color: var(--texto-suave); font-size: 14px; }
 
 .tr-b4__signs-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 6px;
-  padding-top: 0;
+  gap: 8px;
 }
 
 .tr-pop-enter-active { transition: transform 0.18s ease-out, opacity 0.18s ease-out; }
@@ -416,13 +409,13 @@ const SeatTag = defineComponent({
   gap: 4px;
   min-width: 0;
   padding: 6px 8px;
-  border-radius: 12px;
-  background: rgba(0, 0, 0, 0.2);
-  border: 2px solid transparent;
+  border-radius: var(--radio-boton);
+  background: var(--noche-0);
+  border: 1.5px solid transparent;
   text-align: center;
 }
 
-.tr-seat--acting { border-color: #fde047; }
+.tr-seat--acting { border-color: var(--celeste); }
 .tr-seat--away { opacity: 0.6; }
 
 .tr-seat__name {
@@ -431,7 +424,7 @@ const SeatTag = defineComponent({
   justify-content: center;
   align-items: center;
   gap: 4px;
-  font-size: 0.85rem;
+  font-size: 14px;
   max-width: 100%;
 }
 
@@ -447,20 +440,19 @@ const SeatTag = defineComponent({
   flex-wrap: wrap;
   justify-content: center;
   gap: 4px;
-  font-size: 0.72rem;
-  color: rgba(255, 255, 255, 0.75);
+  font-size: 12px;
+  color: var(--texto-suave);
 }
 
 .tr-seat__badge {
   padding: 1px 7px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.15);
-  font-size: 0.66rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  border: 1px solid var(--linea);
+  color: var(--texto-suave);
+  font-size: 12px;
+  font-weight: 600;
 }
 
-.tr-seat__badge--turn { background: #fde047; color: #422006; }
-.tr-seat__badge--away { background: #fecaca; color: #7f1d1d; }
+.tr-seat__badge--turn { border-color: var(--celeste); color: var(--celeste-vivo); }
+.tr-seat__badge--away { border-color: var(--ambar); color: var(--ambar); }
 </style>

@@ -1,8 +1,8 @@
 <template>
   <div class="tr-page-shell">
-    <q-btn flat no-caps color="primary" icon="arrow_back" label="Historial" class="self-start" to="/historial" />
+    <NzBoton variante="texto" icono="volver" label="Historial" class="self-start" to="/historial" />
 
-    <LoadingState :loading="loading" :empty="!loading && !match" empty-label="No encontramos esa partida." empty-icon="search_off">
+    <LoadingState :loading="loading" :empty="!loading && !match" empty-label="No encontramos esa partida." empty-icon="sinResultados">
       <template v-if="match">
         <section class="tr-section-card tr-detail-head">
           <span class="tr-detail-head__result" :class="`tr-detail-head__result--${match.result}`">
@@ -16,7 +16,7 @@
             {{ formatDateTime(match.endedAt) }}
           </p>
           <p v-if="resultDetail(match)" class="tr-detail-head__meta">{{ resultDetail(match) }}</p>
-          <p v-if="match.config.bet" class="tr-num tr-detail-head__chips" :class="match.chipsNet >= 0 ? 'text-positive' : 'text-negative'">
+          <p v-if="match.config.bet" class="tr-num tr-detail-head__chips" :class="amountToneClass(match.chipsNet)">
             {{ formatSignedChips(match.chipsNet) }} fichas
           </p>
         </section>
@@ -66,7 +66,7 @@ import { useRoute } from 'vue-router';
 import LoadingState from '../../components/LoadingState.vue';
 import PlayingCard from '../../components/game/PlayingCard.vue';
 import { fetchMatch } from '../../services/api.js';
-import { formatChips, formatDateTime, formatSignedChips } from '../../utils/format.js';
+import { amountToneClass, formatChips, formatDateTime, formatSignedChips } from '../../utils/format.js';
 import { describeEvent } from '../../utils/gameText.js';
 import { useAuthStore } from '../../stores/auth.js';
 import { RESULT_LABELS, opponentsLabel, resultDetail } from '../../utils/matchText.js';
@@ -160,21 +160,19 @@ onMounted(async () => {
 .tr-detail-head__result {
   padding: 3px 12px;
   border-radius: 999px;
-  font-size: 0.75rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  border: 1px solid var(--linea);
+  color: var(--texto-suave);
+  font-size: 12px;
+  font-weight: 700;
 }
 
-.tr-detail-head__result--won { background: #dcfce7; color: #166534; }
-.tr-detail-head__result--lost { background: #fee2e2; color: #991b1b; }
-.tr-detail-head__result--cancelled { background: #f1f5f9; color: #475569; }
+.tr-detail-head__result--won { border-color: var(--oro); color: var(--oro); }
 
-.tr-detail-head__score { font-size: 1.8rem; font-weight: 800; }
-.tr-detail-head__meta { color: #64748b; font-size: 0.85rem; }
+.tr-detail-head__score { font-family: var(--fuente-titulo); font-size: 32px; font-weight: 700; }
+.tr-detail-head__meta { color: var(--texto-suave); font-size: 14px; }
 .tr-detail-head__chips { font-weight: 800; }
 
-.tr-detail-empty { color: #64748b; margin: 0; }
+.tr-detail-empty { color: var(--texto-suave); margin: 0; }
 
 :deep(.tr-hand-header) { padding-left: 0; padding-right: 0; }
 
@@ -194,8 +192,8 @@ onMounted(async () => {
 
 .tr-hand-body__label {
   width: 110px;
-  color: #64748b;
-  font-size: 0.8rem;
+  color: var(--texto-suave);
+  font-size: 13px;
   font-weight: 600;
 }
 
@@ -207,8 +205,8 @@ onMounted(async () => {
 .tr-hand-body__events {
   margin: 0;
   padding-left: 20px;
-  color: #334155;
-  font-size: 0.85rem;
+  color: var(--texto);
+  font-size: 14px;
   line-height: 1.55;
 }
 </style>

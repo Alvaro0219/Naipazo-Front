@@ -9,7 +9,7 @@
       :loading="firstLoad"
       :empty="!firstLoad && pagination.rowsNumber === 0"
       empty-label="Todavía no jugaste ninguna partida."
-      empty-icon="history"
+      empty-icon="historial"
     >
       <q-table
         v-model:pagination="pagination"
@@ -41,13 +41,13 @@
                 <span
                   v-if="row.config.bet"
                   class="tr-match__chips tr-num"
-                  :class="row.chipsNet > 0 ? 'text-positive' : row.chipsNet < 0 ? 'text-negative' : ''"
+                  :class="amountToneClass(row.chipsNet)"
                 >
                   {{ formatSignedChips(row.chipsNet) }} fichas
                 </span>
                 <span v-else class="tr-match__chips">Gratis</span>
               </div>
-              <q-icon name="chevron_right" size="20px" color="grey-5" />
+              <Icono nombre="siguiente" class="tr-match__flecha" />
             </router-link>
           </div>
         </template>
@@ -61,7 +61,7 @@ import { onMounted } from 'vue';
 import LoadingState from '../../components/LoadingState.vue';
 import { usePaginatedList } from '../../composables/usePaginatedList.js';
 import { fetchMatches } from '../../services/api.js';
-import { formatDateTime, formatSignedChips } from '../../utils/format.js';
+import { amountToneClass, formatDateTime, formatSignedChips } from '../../utils/format.js';
 import { RESULT_LABELS, opponentsLabel, resultDetail } from '../../utils/matchText.js';
 
 const columns = [{ name: 'id', field: 'id', label: 'Partida' }];
@@ -81,31 +81,31 @@ onMounted(reload);
   gap: 12px;
   padding: 12px 14px;
   margin-bottom: 8px;
-  border-radius: 14px;
-  background: #fff;
-  border: 1px solid #e2e8f0;
+  border-radius: var(--radio-panel);
+  background: var(--noche-2);
+  border: 1px solid var(--linea);
   color: inherit;
   text-decoration: none;
 }
 
-.tr-match:hover { border-color: #cbd5e1; }
+.tr-match:hover { border-color: rgba(143, 167, 207, 0.5); color: inherit; }
+
+.tr-match__flecha { color: var(--texto-suave); }
 
 .tr-match__result {
   flex-shrink: 0;
   width: 84px;
   padding: 4px 0;
   border-radius: 999px;
-  font-size: 0.75rem;
-  font-weight: 800;
+  border: 1px solid var(--linea);
+  color: var(--texto-suave);
+  font-size: 12px;
+  font-weight: 700;
   text-align: center;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
 }
 
-.tr-match__result--won { background: #dcfce7; color: #166534; }
-.tr-match__result--lost { background: #fee2e2; color: #991b1b; }
-.tr-match__result--cancelled { background: #f1f5f9; color: #475569; }
-.tr-match__result--no-result { background: #fef9c3; color: #713f12; }
+/* Ganaste con chip de borde dorado; el resto, neutro (10.7) */
+.tr-match__result--won { border-color: var(--oro); color: var(--oro); }
 
 .tr-match__main {
   flex: 1;
@@ -121,8 +121,8 @@ onMounted(reload);
 }
 
 .tr-match__meta {
-  color: #64748b;
-  font-size: 0.8rem;
+  color: var(--texto-suave);
+  font-size: 13px;
 }
 
 .tr-match__side {
@@ -132,15 +132,15 @@ onMounted(reload);
   flex-shrink: 0;
 }
 
-.tr-match__score { font-weight: 800; }
+.tr-match__score { font-family: var(--fuente-titulo); font-weight: 700; }
 
 .tr-match__chips {
-  color: #64748b;
-  font-size: 0.8rem;
+  color: var(--texto-suave);
+  font-size: 13px;
   font-weight: 600;
 }
 
 @media (max-width: 420px) {
-  .tr-match__result { width: 70px; font-size: 0.68rem; }
+  .tr-match__result { width: 72px; }
 }
 </style>

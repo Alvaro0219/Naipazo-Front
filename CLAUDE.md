@@ -96,5 +96,16 @@ el corte de red se simula con `setOffline` + `window.__socketDebug.socket` (solo
   `stores/__tests__/game.test.js` (reloj con el plazo del servidor). Cartas: imágenes en `public/cartas/{id}.png` (baraja de
   Wikimedia Commons, CC BY-SA 3.0; créditos en `public/cartas/CREDITOS.md` y en Términos), vía `utils/cards.js#cardImageUrl`. Hoja de contacto de las 40 cartas en `/dev/cartas` (solo
   desarrollo). `game.frozen` (evento `game:frozen`): diálogo "Partida suspendida" en la mesa. `IntegrityCard` en Administración.
+- **Estilos "Noche porteña" (`../ESTILOS_NAIPAZO.md`, hitos N0–N8; inventario en `docs/ux/noche-portena/INVENTARIO.md`):**
+  colores solo como tokens de `src/css/tokens.css` (mapeados a Quasar en `src/quasar-variables.sass`; modo oscuro fijo),
+  fuentes autoalojadas en `src/assets/fonts` (`src/css/fonts.css`), base global y anulación de sombras de Quasar en
+  `src/css/base.css`. Componentes base registrados globalmente en `main.js` (`src/components/ui/`): `NzBoton` (principal,
+  luminoso, secundario, texto), `NzCampo`, `NzSegmentado` (grupo de radios), `NzChip`, `NzPanel`, `NzHoja`, `NzAviso`,
+  `NzSkeleton`, `NzVacio`, `Icono` (único set: Lucide con trazo 1,75 + palos propios), `SolDeMayo`, `Ficha`, `Avatar`.
+  No usar `q-btn`, `q-input`, `q-btn-toggle`, `q-icon`, `q-banner` ni `q-badge` en pantallas. Confirmaciones con
+  `composables/useConfirmar.js#confirmar` (mismas opciones que `$q.dialog`). Montos con `utils/format.js#amountToneClass`
+  (oro premio, verde devolución, suave lo que sale: perder nunca es rojo). Muestras en `/dev/componentes` y `/dev/cartas`.
+  Los comentarios de un componente van en el `<script>`, no antes de la raíz del `<template>` (en desarrollo rompen la herencia de
+  clases). Créditos en `CREDITS.md`. Sin commits hasta que el dueño apruebe cada hito.
 - Git: siempre en `main`, sin ramas nuevas; no hacer push sin confirmarlo.
 - Despliegue en Cloudflare Pages; `public/_redirects` resuelve el ruteo SPA.

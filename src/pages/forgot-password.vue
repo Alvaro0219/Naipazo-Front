@@ -2,31 +2,29 @@
   <div class="tr-auth-shell">
     <div class="tr-auth-card">
       <div class="tr-auth-brand">
-        <img src="/favicon.svg" alt="" />
+        <SolDeMayo :size="40" />
         <div>
           <strong>Recuperar contraseña</strong>
           <span>Te mandamos un enlace para elegir una nueva</span>
         </div>
       </div>
 
-      <q-banner v-if="sent" rounded class="bg-green-1 text-green-10 q-mb-md" role="status">
-        <template #avatar><q-icon name="mark_email_read" color="positive" /></template>
+      <NzAviso v-if="sent" tono="verde" icono="emailOk" class="q-mb-md">
         Si el email está registrado, te enviamos un enlace para cambiar la contraseña. Vence en 1 hora.
         Revisá también la carpeta de spam.
-      </q-banner>
+      </NzAviso>
 
-      <q-form v-else class="column q-gutter-y-sm" greedy @submit.prevent="handleSubmit">
-        <q-input
+      <q-form v-else class="column q-gutter-y-md" greedy @submit.prevent="handleSubmit">
+        <NzCampo
           v-model="email"
           type="email"
           label="Email de tu cuenta"
-          outlined
           autocomplete="email"
           autocapitalize="off"
           :rules="[rules.required('El email'), rules.email]"
           lazy-rules
         />
-        <q-btn type="submit" color="primary" size="lg" unelevated no-caps label="Enviar enlace" :loading="loading" class="full-width" />
+        <NzBoton type="submit" variante="principal" tamano="lg" bloque label="Enviar enlace" :loading="loading" />
       </q-form>
 
       <div class="tr-auth-footer">

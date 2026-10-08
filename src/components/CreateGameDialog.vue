@@ -1,12 +1,7 @@
 <template>
-  <q-dialog :model-value="modelValue" @update:model-value="$emit('update:modelValue', $event)">
-    <q-card class="tr-create">
-      <q-card-section>
-        <h2 class="tr-create__title">Crear partida</h2>
-      </q-card-section>
-
+  <NzHoja :model-value="modelValue" titulo="Crear partida" @update:model-value="$emit('update:modelValue', $event)">
       <q-form ref="formRef" @submit.prevent="submit">
-        <q-card-section class="column q-gutter-y-md">
+        <div class="column q-gutter-y-md">
           <!-- Qué crear: una mesa 1 contra 1 o un torneo -->
           <div class="tr-kind" role="radiogroup" aria-label="Tipo de partida">
             <button
@@ -19,7 +14,7 @@
               :aria-checked="kind === option.value"
               @click="kind = option.value"
             >
-              <q-icon :name="option.icon" size="26px" />
+              <Icono :nombre="option.icon" :size="26" />
               <strong>{{ option.label }}</strong>
               <span>{{ option.hint }}</span>
             </button>
@@ -27,44 +22,17 @@
 
           <div v-if="kind === 'room'">
             <div class="tr-create__label">Modo</div>
-            <q-btn-toggle
-              v-model="mode"
-              spread
-              no-caps
-              unelevated
-              toggle-color="primary"
-              color="grey-2"
-              text-color="dark"
-              :options="[{ label: '1 vs 1', value: '1v1' }, { label: '2 vs 2 (parejas)', value: '2v2' }]"
-            />
+            <NzSegmentado v-model="mode" bloque aria-label="Modo" :opciones="[{ label: '1 vs 1', value: '1v1' }, { label: '2 vs 2 (parejas)', value: '2v2' }]" />
           </div>
 
           <div v-if="kind === 'tournament'">
             <div class="tr-create__label">Jugadores</div>
-            <q-btn-toggle
-              v-model="size"
-              spread
-              no-caps
-              unelevated
-              toggle-color="primary"
-              color="grey-2"
-              text-color="dark"
-              :options="[{ label: '4 jugadores', value: 4 }, { label: '8 jugadores', value: 8 }]"
-            />
+            <NzSegmentado v-model="size" bloque aria-label="Jugadores" :opciones="[{ label: '4 jugadores', value: 4 }, { label: '8 jugadores', value: 8 }]" />
           </div>
 
           <div>
             <div class="tr-create__label">{{ kind === 'tournament' ? 'Puntos de cada partida' : 'Puntos' }}</div>
-            <q-btn-toggle
-              v-model="targetPoints"
-              spread
-              no-caps
-              unelevated
-              toggle-color="primary"
-              color="grey-2"
-              text-color="dark"
-              :options="[{ label: 'A 15', value: 15 }, { label: 'A 30', value: 30 }]"
-            />
+            <NzSegmentado v-model="targetPoints" bloque aria-label="Puntos" :opciones="[{ label: 'A 15', value: 15 }, { label: 'A 30', value: 30 }]" />
           </div>
 
           <div>
@@ -73,6 +41,7 @@
               :options="amountOptions"
               :label="kind === 'tournament' ? 'Inscripción' : 'Apuesta'"
               outlined
+              stack-label
               emit-value
               map-options
               options-dense
@@ -82,7 +51,7 @@
           </div>
 
           <div v-if="kind === 'tournament'" class="tr-create__prize">
-            <q-icon name="emoji_events" size="22px" color="accent" />
+            <Icono nombre="trofeo" :size="22" class="tr-create__trofeo" />
             <span v-if="amount > 0">
               El campeón se lleva <strong class="tr-num">{{ formatChips(prize) }}</strong> fichas
               ({{ formatChips(amount) }} × {{ size }} jugadores).
@@ -91,27 +60,22 @@
           </div>
 
           <ChipsNotice compact />
-          <div class="tr-create__hint">
-            {{ kind === 'tournament'
-              ? 'Cuando se completan los cupos se sortea el cuadro y empiezan las partidas. Sin flor.'
-              : 'Por ahora todas las mesas se juegan sin flor.' }}
+          <div v-if="kind === 'tournament'" class="tr-create__hint">
+            Cuando se completan los cupos se sortea el cuadro y empiezan las partidas.
           </div>
-        </q-card-section>
+        </div>
 
-        <q-card-actions align="right">
-          <q-btn flat no-caps label="Cancelar" v-close-popup />
-          <q-btn
+        <div class="tr-create__acciones">
+          <NzBoton variante="texto" label="Cancelar" @click="$emit('update:modelValue', false)" />
+          <NzBoton
             type="submit"
-            color="primary"
-            unelevated
-            no-caps
+            variante="principal"
             :label="kind === 'tournament' ? 'Crear torneo' : 'Crear mesa'"
             :loading="loading"
           />
-        </q-card-actions>
+        </div>
       </q-form>
-    </q-card>
-  </q-dialog>
+  </NzHoja>
 </template>
 
 <script setup>
@@ -124,8 +88,8 @@ import { useWalletStore } from '../stores/wallet.js';
 import { formatChips } from '../utils/format.js';
 
 const KINDS = [
-  { value: 'room', label: 'Mesa', icon: 'style', hint: '1 vs 1 o 2 vs 2' },
-  { value: 'tournament', label: 'Torneo', icon: 'military_tech', hint: '4 u 8 jugadores' }
+  { value: 'room', label: 'Mesa', icon: 'naipe', hint: '1 vs 1 o 2 vs 2' },
+  { value: 'tournament', label: 'Torneo', icon: 'trofeo', hint: '4 u 8 jugadores' }
 ];
 
 const props = defineProps({ modelValue: Boolean });
@@ -196,15 +160,6 @@ async function submit() {
 </script>
 
 <style scoped>
-.tr-create { width: min(92vw, 440px); }
-
-.tr-create__title {
-  margin: 0;
-  font-size: 1.2rem;
-  font-weight: 700;
-  line-height: 1.3;
-}
-
 .tr-kind {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -217,45 +172,57 @@ async function submit() {
   align-items: center;
   gap: 2px;
   padding: 12px 8px;
-  border-radius: 12px;
-  border: 2px solid #e2e8f0;
-  background: #fff;
-  color: #475569;
+  border-radius: var(--radio-boton);
+  border: 1.5px solid var(--linea-control);
+  background: var(--noche-0);
+  color: var(--texto-suave);
   font: inherit;
   cursor: pointer;
 }
 
-.tr-kind__option strong { color: #0f172a; font-size: 1rem; }
-.tr-kind__option span { font-size: 0.8rem; }
+.tr-kind__option strong { color: var(--texto); font-family: var(--fuente-titulo); font-size: 16px; }
+.tr-kind__option span { font-size: 13px; }
 
+/* Tarjeta elegida: borde celeste y resplandor (10.3) */
 .tr-kind__option--active {
-  border-color: #166534;
-  background: #f0fdf4;
-  color: #166534;
+  border-color: var(--celeste);
+  background: var(--noche-3);
+  color: var(--celeste);
+  box-shadow: var(--glow-celeste-2);
 }
-
-.tr-kind__option:focus-visible { outline: 3px solid #fde047; outline-offset: 2px; }
 
 .tr-create__label {
   margin-bottom: 6px;
   font-weight: 600;
-  font-size: 0.9rem;
+  font-size: 14px;
+  color: var(--texto-suave);
 }
 
 .tr-create__prize {
   display: flex;
   align-items: flex-start;
   gap: 8px;
-  padding: 10px 12px;
-  border-radius: 10px;
-  background: #f0fdf4;
-  border: 1px solid #bbf7d0;
-  color: #14532d;
-  font-size: 0.9rem;
+  padding: 12px 14px;
+  border-radius: var(--radio-boton);
+  background: var(--noche-0);
+  border: 1px solid var(--linea);
+  color: var(--texto);
+  font-size: 14px;
 }
 
+/* Premio del campeón en oro (10.3) */
+.tr-create__prize strong,
+.tr-create__trofeo { color: var(--oro); }
+
 .tr-create__hint {
-  color: #64748b;
-  font-size: 0.8rem;
+  color: var(--texto-suave);
+  font-size: 13px;
+}
+
+.tr-create__acciones {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 20px;
 }
 </style>

@@ -8,67 +8,38 @@
         <p>Sumate a una mesa o a un torneo, o creá tu propia partida.</p>
       </div>
       <div class="tr-lobby-actions">
-        <q-btn
-          color="primary"
-          unelevated
-          no-caps
-          icon="add"
-          label="Crear partida"
-          :disable="busy"
-          @click="showCreate = true"
-        />
-        <q-btn
-          outline
-          color="primary"
-          no-caps
-          icon="lock"
-          label="Sala privada"
-          :disable="busy"
-          @click="showPrivate = true"
-        />
+        <NzBoton variante="principal" icono="mas" label="Crear partida" :disable="busy" @click="showCreate = true" />
+        <NzBoton variante="secundario" icono="candado" label="Sala privada" :disable="busy" @click="showPrivate = true" />
       </div>
     </header>
 
-    <q-banner v-if="myRoom" rounded class="tr-my-room">
-      <template #avatar><q-icon name="style" color="primary" /></template>
+    <NzAviso v-if="myRoom" icono="naipe" class="tr-my-room">
       {{ myRoom.status === 'waiting' ? 'Tenés una mesa esperando rival.' : 'Tenés una partida en curso.' }}
-      <template #action>
-        <q-btn color="primary" unelevated no-caps label="Volver a la mesa" :to="`/mesa/${myRoom.id}`" />
+      <template #accion>
+        <NzBoton variante="luminoso" tamano="sm" label="Volver a la mesa" :to="`/mesa/${myRoom.id}`" />
       </template>
-    </q-banner>
+    </NzAviso>
 
-    <q-banner v-if="myTournament" rounded class="tr-my-room">
-      <template #avatar><q-icon name="military_tech" color="accent" /></template>
+    <NzAviso v-if="myTournament" icono="trofeo" class="tr-my-room">
       {{ myTournament.status === 'waiting'
         ? `Estás inscripto en el torneo ${myTournament.code} (${myTournament.entrants.length} de ${myTournament.config.size}).`
         : `Estás jugando el torneo ${myTournament.code}.` }}
-      <template #action>
-        <q-btn color="primary" unelevated no-caps label="Ver torneo" :to="`/torneos/${myTournament.id}`" />
+      <template #accion>
+        <NzBoton variante="luminoso" tamano="sm" label="Ver torneo" :to="`/torneos/${myTournament.id}`" />
       </template>
-    </q-banner>
+    </NzAviso>
 
     <div class="tr-lobby-filters">
       <div class="tr-lobby-filters__group">
-        <q-btn-toggle
+        <NzSegmentado
           v-model="kindFilter"
-          no-caps
-          unelevated
-          rounded
-          toggle-color="primary"
-          color="white"
-          text-color="dark"
-          :options="[{ label: 'Todas', value: 'all' }, { label: 'Mesas', value: 'room' }, { label: 'Torneos', value: 'tournament' }]"
+          aria-label="Tipo de partida"
+          :opciones="[{ label: 'Todas', value: 'all' }, { label: 'Mesas', value: 'room' }, { label: 'Torneos', value: 'tournament' }]"
         />
-        <q-btn-toggle
+        <NzSegmentado
           v-model="modeFilter"
-          no-caps
-          unelevated
-          rounded
-          toggle-color="primary"
-          color="white"
-          text-color="dark"
           aria-label="Modo"
-          :options="[{ label: 'Todos', value: 'all' }, { label: '1 vs 1', value: '1v1' }, { label: '2 vs 2', value: '2v2' }]"
+          :opciones="[{ label: 'Todos', value: 'all' }, { label: '1 vs 1', value: '1v1' }, { label: '2 vs 2', value: '2v2' }]"
         />
       </div>
       <span class="tr-lobby-live" :class="{ 'tr-lobby-live--on': status === 'connected' }">
@@ -81,44 +52,38 @@
       :empty="rooms !== null && tournaments !== null && items.length === 0"
       label="Buscando partidas…"
       :empty-label="emptyLabel"
-      empty-icon="style"
+      empty-icon="naipe"
     >
       <ul class="tr-game-list">
         <li v-for="item in items" :key="`${item.kind}-${item.data.id}`">
           <!-- Mesa: 1 vs 1 o 2 vs 2 -->
           <div v-if="item.kind === 'room'" class="tr-game tr-game--room">
-            <span class="tr-game__kind"><q-icon :name="is2v2(item.data) ? 'groups' : 'style'" size="16px" />{{ is2v2(item.data) ? 'Mesa 2 vs 2' : 'Mesa' }}</span>
+            <span class="tr-game__kind"><Icono :nombre="is2v2(item.data) ? 'pareja' : 'naipe'" :size="16" />{{ is2v2(item.data) ? 'Mesa 2 vs 2' : 'Mesa' }}</span>
             <div class="tr-game__main">
               <strong>{{ item.data.seats[0]?.username }} <span class="tr-game__code">{{ item.data.code }}</span></strong>
               <span class="tr-game__meta">
                 <template v-if="is2v2(item.data)"><strong class="tr-num">{{ item.data.seats.length }} de 4</strong> · </template>
-                A {{ item.data.config.targetPoints }} · sin flor
+                A {{ item.data.config.targetPoints }}
                 <span v-if="item.data.config.bet" class="tr-game__chips">{{ formatChips(item.data.config.bet) }} fichas</span>
                 <template v-else>· gratis</template>
               </span>
               <span v-if="is2v2(item.data)" class="tr-game__meta">{{ teamsLabel(item.data) }}</span>
             </div>
-            <q-btn
+            <NzBoton
               v-if="item.data.seats.some((x) => x.userId === auth.user?.id)"
-              outline
-              color="primary"
-              no-caps
+              variante="secundario"
               label="Tu mesa"
               :to="`/mesa/${item.data.id}`"
             />
-            <q-btn
+            <NzBoton
               v-else-if="is2v2(item.data) && item.data.seats.length >= 4"
-              outline
-              color="grey-7"
-              no-caps
+              variante="secundario"
               label="Completa"
               disable
             />
-            <q-btn
+            <NzBoton
               v-else
-              color="primary"
-              unelevated
-              no-caps
+              variante="luminoso"
               :label="canAfford(item.data.config.bet) ? 'Unirme' : 'Sin fichas'"
               :disable="busy || !canAfford(item.data.config.bet)"
               :loading="joiningId === item.data.id"
@@ -128,7 +93,7 @@
 
           <!-- Torneo: 4 u 8 jugadores, eliminación directa -->
           <div v-else class="tr-game tr-game--tournament">
-            <span class="tr-game__kind tr-game__kind--tournament"><q-icon name="military_tech" size="16px" />Torneo</span>
+            <span class="tr-game__kind tr-game__kind--tournament"><Icono nombre="trofeo" :size="16" />Torneo</span>
             <router-link :to="`/torneos/${item.data.id}`" class="tr-game__main">
               <strong>{{ hostName(item.data) }} <span class="tr-game__code">{{ item.data.code }}</span></strong>
               <span class="tr-game__meta">
@@ -139,31 +104,27 @@
               <span class="tr-game__seats">
                 <q-linear-progress
                   :value="item.data.entrants.length / item.data.config.size"
-                  color="accent"
-                  track-color="grey-3"
+                  color="primary"
+                  track-color="secondary"
                   rounded
                   size="6px"
                   class="tr-game__bar"
                 />
                 <span class="tr-num">{{ item.data.entrants.length }} de {{ item.data.config.size }}</span>
-                <span v-if="item.data.config.buyIn" class="tr-game__chips tr-num">
-                  <q-icon name="emoji_events" size="14px" /> {{ formatChips(item.data.prize) }}
+                <span v-if="item.data.config.buyIn" class="tr-game__premio tr-num">
+                  <Icono nombre="trofeo" :size="14" /> {{ formatChips(item.data.prize) }}
                 </span>
               </span>
             </router-link>
-            <q-btn
+            <NzBoton
               v-if="isEntrant(item.data)"
-              outline
-              color="primary"
-              no-caps
+              variante="secundario"
               label="Ver"
               :to="`/torneos/${item.data.id}`"
             />
-            <q-btn
+            <NzBoton
               v-else
-              color="primary"
-              unelevated
-              no-caps
+              variante="luminoso"
               :label="canAfford(item.data.config.buyIn) ? 'Inscribirme' : 'Sin fichas'"
               :disable="busy || !canAfford(item.data.config.buyIn)"
               :loading="joiningId === item.data.id"
@@ -187,6 +148,7 @@ import CreateGameDialog from '../../components/CreateGameDialog.vue';
 import EmailVerifyBanner from '../../components/EmailVerifyBanner.vue';
 import LoadingState from '../../components/LoadingState.vue';
 import PrivateRoomDialog from '../../components/PrivateRoomDialog.vue';
+import { confirmar } from '../../composables/useConfirmar.js';
 import { useSocket } from '../../composables/useSocket.js';
 import { fetchMyRoom, fetchMyTournament, joinRoom, joinTournament } from '../../services/api.js';
 import { useAuthStore } from '../../stores/auth.js';
@@ -303,7 +265,7 @@ function handleJoinRoom(room) {
     go();
     return;
   }
-  $q.dialog({
+  confirmar({
     title: `Mesa por ${formatChips(room.config.bet)} fichas`,
     message: `Al empezar se descuentan ${formatChips(room.config.bet)} fichas de tu saldo. `
       + (is2v2(room)
@@ -315,7 +277,7 @@ function handleJoinRoom(room) {
 }
 
 function handleJoinTournament(t) {
-  $q.dialog({
+  confirmar({
     title: `Inscribirte al torneo ${t.code}`,
     message: t.config.buyIn
       ? `Se descuentan ${formatChips(t.config.buyIn)} fichas de tu saldo ahora. Si salís antes de que se complete, te las devolvemos. `
@@ -358,11 +320,6 @@ onBeforeUnmount(() => {
   gap: 8px;
 }
 
-.tr-my-room {
-  background: #ecfdf5;
-  border: 1px solid #bbf7d0;
-}
-
 .tr-lobby-filters {
   display: flex;
   align-items: center;
@@ -381,8 +338,8 @@ onBeforeUnmount(() => {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  color: #64748b;
-  font-size: 0.8rem;
+  color: var(--texto-suave);
+  font-size: 13px;
   font-weight: 600;
 }
 
@@ -390,10 +347,20 @@ onBeforeUnmount(() => {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #cbd5e1;
+  background: var(--linea);
 }
 
-.tr-lobby-live--on .tr-lobby-live__dot { background: #16a34a; }
+/* "En vivo": punto celeste que late suave (10.2) */
+.tr-lobby-live--on .tr-lobby-live__dot {
+  background: var(--celeste-vivo);
+  box-shadow: var(--glow-celeste-1);
+  animation: tr-latido 2s ease-in-out infinite;
+}
+
+@keyframes tr-latido {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
 
 .tr-game-list {
   list-style: none;
@@ -409,30 +376,12 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 14px 16px 14px 18px;
-  border-radius: 14px;
-  background: #fff;
-  border: 1px solid #e2e8f0;
+  padding: 14px 16px;
+  border-radius: var(--radio-panel);
+  background: var(--noche-2);
+  border: 1px solid var(--linea);
   overflow: hidden;
 }
-
-/* Franja de color a la izquierda: verde las mesas, dorada los torneos */
-.tr-game::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 5px;
-  background: #16a34a;
-}
-
-.tr-game--tournament {
-  background: #fffdf3;
-  border-color: #fde68a;
-}
-
-.tr-game--tournament::before { background: #ca8a04; }
 
 .tr-game__kind {
   position: absolute;
@@ -441,14 +390,10 @@ onBeforeUnmount(() => {
   display: inline-flex;
   align-items: center;
   gap: 3px;
-  color: #166534;
-  font-size: 0.65rem;
-  font-weight: 800;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
+  color: var(--texto-suave);
+  font-size: 12px;
+  font-weight: 600;
 }
-
-.tr-game__kind--tournament { color: #a16207; }
 
 .tr-game__main {
   flex: 1;
@@ -468,15 +413,15 @@ onBeforeUnmount(() => {
 
 .tr-game__code {
   margin-left: 6px;
-  color: #94a3b8;
-  font-size: 0.75rem;
+  color: var(--texto-suave);
+  font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.08em;
 }
 
 .tr-game__meta {
-  color: #64748b;
-  font-size: 0.85rem;
+  color: var(--texto-suave);
+  font-size: 14px;
 }
 
 .tr-game__chips {
@@ -486,11 +431,19 @@ onBeforeUnmount(() => {
   margin-left: 4px;
   padding: 1px 8px;
   border-radius: 999px;
-  background: #fefce8;
-  border: 1px solid #fde68a;
-  color: #713f12;
+  border: 1px solid var(--linea);
+  color: var(--texto-suave);
+  font-weight: 600;
+  font-size: 13px;
+}
+
+/* Premio del torneo: oro (10.2) */
+.tr-game__premio {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--oro);
   font-weight: 700;
-  font-size: 0.8rem;
 }
 
 .tr-game__seats {
@@ -499,13 +452,13 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: 6px 8px;
   white-space: nowrap;
-  color: #475569;
-  font-size: 0.8rem;
-  font-weight: 700;
+  color: var(--texto-suave);
+  font-size: 13px;
+  font-weight: 600;
 }
 
 .tr-game__bar { flex: 0 1 110px; min-width: 50px; }
 
 /* El botón no tapa la etiqueta de tipo */
-.tr-game > .q-btn { margin-top: 14px; }
+.tr-game > .nz-boton { margin-top: 14px; }
 </style>

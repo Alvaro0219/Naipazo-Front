@@ -6,45 +6,20 @@
     </header>
 
     <div class="tr-ranking-filters">
-      <q-btn-toggle
+      <NzSegmentado
         v-model="filters.by"
-        no-caps
-        unelevated
-        rounded
-        toggle-color="primary"
-        color="white"
-        text-color="dark"
-        :options="[{ label: 'Partidas ganadas', value: 'won' }, { label: 'Fichas ganadas', value: 'chips' }]"
+        aria-label="Criterio"
+        :opciones="[{ label: 'Partidas ganadas', value: 'won' }, { label: 'Fichas ganadas', value: 'chips' }]"
       />
-      <q-btn-toggle
-        v-model="filters.mode"
-        no-caps
-        unelevated
-        rounded
-        toggle-color="primary"
-        color="white"
-        text-color="dark"
-        aria-label="Modo"
-        :options="[{ label: '1 vs 1', value: '1v1' }, { label: '2 vs 2', value: '2v2' }]"
-      />
-      <q-select
-        v-model="filters.period"
-        dense
-        outlined
-        emit-value
-        map-options
-        options-dense
-        class="tr-ranking-period"
-        :options="PERIODS"
-        aria-label="Período"
-      />
+      <NzSegmentado v-model="filters.mode" aria-label="Modo" :opciones="[{ label: '1 vs 1', value: '1v1' }, { label: '2 vs 2', value: '2v2' }]" />
+      <NzSegmentado v-model="filters.period" aria-label="Período" :opciones="PERIODS" />
     </div>
 
     <LoadingState
       :loading="firstLoad"
       :empty="!firstLoad && pagination.rowsNumber === 0"
       empty-label="Todavía no hay nadie en este ranking."
-      empty-icon="emoji_events"
+      empty-icon="medalla"
     >
       <q-table
         v-model:pagination="pagination"
@@ -125,11 +100,10 @@ onMounted(reload);
   gap: 10px;
 }
 
-.tr-ranking-period { min-width: 170px; background: #fff; }
-
 .tr-ranking-table { padding: 4px 8px; }
 
-:deep(.tr-ranking-me) { background: #f0fdf4; font-weight: 700; }
+:deep(.tr-ranking-me) td { font-weight: 700; }
+:deep(.tr-ranking-me) td:first-child { box-shadow: inset 2px 0 0 var(--celeste); }
 
 .tr-rank {
   display: inline-flex;
@@ -139,16 +113,15 @@ onMounted(reload);
   height: 28px;
   border-radius: 50%;
   font-weight: 800;
-  color: #475569;
+  color: var(--texto-suave);
 }
 
-.tr-rank--1 { background: #fde68a; color: #713f12; }
-.tr-rank--2 { background: #e2e8f0; color: #334155; }
-.tr-rank--3 { background: #fed7aa; color: #7c2d12; }
+/* Puesto 1 en oro (10.7): número y borde dorados */
+.tr-rank--1 { border: 1.5px solid var(--oro); color: var(--oro); }
 
 .tr-ranking-note {
   margin: 0;
-  color: #64748b;
-  font-size: 0.8rem;
+  color: var(--texto-suave);
+  font-size: 13px;
 }
 </style>

@@ -1,0 +1,62 @@
+/* Naipazo · "Noche porteña" (ESTILOS_NAIPAZO.md, sección 3). Único lugar donde se definen colores y luces. */
+:root {
+  /* Azul noche (fondos) */
+  --noche-0: #050B1C;   /* lo más profundo: barra inferior, campos */
+  --noche-1: #07122B;   /* fondo de la app */
+  --noche-2: #0A1A3D;   /* paño de la mesa, paneles */
+  --noche-3: #0D2150;   /* paneles elevados, luz central del fondo */
+  --linea: rgba(143, 167, 207, 0.28); /* separadores y bordes en reposo */
+  /* Contorno de controles (campos, botones secundarios, segmentado): la guía exige 3:1 para los bordes de controles
+     (3.1) y --linea queda en 1,7:1. Mismo color, más opaco: 3,3:1 o más sobre noche-0 a noche-3. */
+  --linea-control: rgba(143, 167, 207, 0.62);
+
+  /* Texto */
+  --texto: #EAF3FF;
+  --texto-suave: #8FA7CF;
+
+  /* Luces */
+  --celeste: #5EC8FF;       /* luz principal: acciones, tiempo, tantero, foco */
+  --celeste-vivo: #7FD6FF;  /* intensidad máxima */
+  --oro: #FFCB5C;           /* victoria */
+  --verde: #3DDC84;         /* "Quiero" y confirmaciones */
+  --rojo: #FF5A6E;          /* "No quiero" y errores */
+  --ambar: #FFB547;         /* tiempo por agotarse */
+
+  /* Naipes */
+  --naipe: #F8F5EC;         /* cara de las cartas */
+
+  /* Resplandores (uno por luz) */
+  --glow-celeste-1: 0 0 8px rgba(94, 200, 255, 0.55);
+  --glow-celeste-2: 0 0 16px rgba(94, 200, 255, 0.55);
+  --glow-celeste-3: 0 0 28px rgba(94, 200, 255, 0.45);
+  --glow-oro-2: 0 0 18px rgba(255, 203, 92, 0.6);
+  --glow-oro-3: 0 0 36px rgba(255, 203, 92, 0.5);
+  --glow-verde-2: 0 0 16px rgba(61, 220, 132, 0.5);
+  --glow-rojo-2: 0 0 16px rgba(255, 90, 110, 0.5);
+  --glow-ambar-2: 0 0 16px rgba(255, 181, 71, 0.6);
+
+  /* Tipografía (sección 4) */
+  --fuente-titulo: 'Bricolage Grotesque', 'Instrument Sans', system-ui, sans-serif;
+  --fuente-texto: 'Instrument Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  /* Radios (sección 4) */
+  --radio-boton: 12px;
+  --radio-panel: 16px;
+  --radio-mesa: 22px;
+  --radio-hoja: 24px;
+  --radio-naipe: 9px;
+
+  color-scheme: dark;
+}
+
+/* Efectos de luz reducidos (12.3): sin resplandores amplios; se mantienen bordes y colores.
+   Se activa con la clase en <html> (ajuste del jugador, N8) o si el sistema pide movimiento reducido. */
+:root.nz-luz-reducida {
+  --glow-celeste-2: 0 0 0 transparent;
+  --glow-celeste-3: 0 0 0 transparent;
+  --glow-oro-2: 0 0 0 transparent;
+  --glow-oro-3: 0 0 0 transparent;
+  --glow-verde-2: 0 0 0 transparent;
+  --glow-rojo-2: 0 0 0 transparent;
+  --glow-ambar-2: 0 0 0 transparent;
+}

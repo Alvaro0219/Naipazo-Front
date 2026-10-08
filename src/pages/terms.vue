@@ -2,7 +2,7 @@
   <div class="tr-page-shell tr-terms">
     <header class="tr-page-header">
       <h1>Términos y condiciones</h1>
-      <p>Naipazo: truco online con fichas virtuales</p>
+      <p>Naipazo: truco argentino con fichas virtuales</p>
     </header>
 
     <section class="tr-section-card">
@@ -55,7 +55,7 @@
       </p>
     </section>
 
-    <q-btn flat no-caps color="primary" icon="arrow_back" label="Volver" class="self-start" @click="goBack" />
+    <NzBoton variante="texto" icono="volver" label="Volver" class="self-start" @click="goBack" />
   </div>
 </template>
 
@@ -73,7 +73,7 @@ function goBack() {
 <style scoped>
 .tr-terms p {
   margin: 0 0 8px;
-  color: #334155;
+  color: var(--texto);
   line-height: 1.55;
 }
 

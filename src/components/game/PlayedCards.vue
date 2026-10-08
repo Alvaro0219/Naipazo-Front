@@ -58,7 +58,7 @@ const slots = computed(() => [0, 1, 2].map((i) => {
   border-radius: 12px;
 }
 
-.tr-played__baza--current { background: rgba(255, 255, 255, 0.07); }
+.tr-played__baza--current { background: rgba(143, 167, 207, 0.06); }
 
 .tr-played__cell {
   width: 50px;
@@ -72,19 +72,18 @@ const slots = computed(() => [0, 1, 2].map((i) => {
   width: 50px;
   height: 77px;
   border-radius: 9px;
-  border: 1px dashed rgba(255, 255, 255, 0.2);
+  border: 1px dashed rgba(234, 243, 255, 0.15);
 }
 
 .tr-played__result {
-  font-size: 0.7rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: rgba(255, 255, 255, 0.55);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--texto-suave);
   min-height: 1em;
 }
 
-.tr-played__result--mine { color: #86efac; }
-.tr-played__result--theirs { color: #fca5a5; }
-.tr-played__result--parda { color: #fde68a; }
+/* Baza ganada en oro; perdida neutra; parda en blanco (6.4) */
+.tr-played__result--mine { color: var(--oro); }
+.tr-played__result--theirs { color: var(--texto-suave); }
+.tr-played__result--parda { color: var(--texto); }
 </style>

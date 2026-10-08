@@ -47,7 +47,13 @@ const routes = [
   // La mesa va a pantalla completa, fuera del layout con navegación
   { path: '/mesa/:roomId', component: Table },
   // Solo desarrollo: hoja de contacto de las 40 cartas (EXACTITUD_DEL_JUEGO.md, F-01)
-  ...(import.meta.env.DEV ? [{ path: '/dev/cartas', component: () => import('../pages/dev/cards.vue'), meta: { public: true } }] : []),
+  ...(import.meta.env.DEV
+    ? [
+      { path: '/dev/cartas', component: () => import('../pages/dev/cards.vue'), meta: { public: true } },
+      // Muestra de componentes base de la guía de estilos (N1)
+      { path: '/dev/componentes', component: () => import('../pages/dev/componentes.vue'), meta: { public: true } }
+    ]
+    : []),
   { path: '/:pathMatch(.*)*', redirect: '/' }
 ];
 

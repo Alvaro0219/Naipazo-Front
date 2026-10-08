@@ -20,10 +20,11 @@ const ENGINE_ACTIONS = [
   'CALL_FALTA_ENVIDO', 'ACCEPT', 'REJECT', 'GO_TO_DECK'
 ];
 
-const QBtn = {
-  props: ['label', 'disable'],
+// Botón base falso: deja ver la variante, el tono y el ícono que eligió la barra
+const NzBotonFalso = {
+  props: ['label', 'disable', 'variante', 'tono', 'icono'],
   emits: ['click'],
-  template: '<button :disabled="disable" @click="$emit(\'click\')">{{ label }}</button>'
+  template: '<button :disabled="disable" :data-variante="variante" :data-tono="tono" :data-icono="icono" @click="$emit(\'click\')">{{ label }}</button>'
 };
 
 describe('F-01 / F-07: las 40 cartas', () => {
@@ -69,7 +70,7 @@ describe('F-02: la carta que se toca es la que se envía', () => {
 });
 
 describe('F-03: la barra de cantos sale solo de availableActions', () => {
-  const mountBar = (props) => mount(ActionBar, { props, global: { stubs: { 'q-btn': QBtn } } });
+  const mountBar = (props) => mount(ActionBar, { props, global: { stubs: { NzBoton: NzBotonFalso } } });
 
   it('cada acción del motor (salvo jugar carta) tiene su texto', () => {
     for (const type of ENGINE_ACTIONS.filter((t) => t !== 'PLAY_CARD')) expect(ACTION_LABELS[type]).toBeTruthy();
@@ -91,6 +92,16 @@ describe('F-03: la barra de cantos sale solo de availableActions', () => {
     expect(w.emitted('action')).toEqual([['REJECT']]);
     const sending = mountBar({ available: ['ACCEPT'], disabled: true });
     expect(sending.find('button').attributes('disabled')).toBeDefined();
+  });
+
+  it('Quiero siempre verde con tilde, No quiero siempre rojo con cruz y los cantos en celeste (ESTILOS 3.2)', () => {
+    const w = mountBar({ available: ['ACCEPT', 'REJECT', 'CALL_RETRUCO', 'CALL_ENVIDO', 'GO_TO_DECK'] });
+    const de = (texto) => w.findAll('button').find((b) => b.text() === texto).attributes();
+    expect(de('Quiero')).toMatchObject({ 'data-variante': 'luminoso', 'data-tono': 'verde', 'data-icono': 'tilde' });
+    expect(de('No quiero')).toMatchObject({ 'data-variante': 'luminoso', 'data-tono': 'rojo', 'data-icono': 'cerrar' });
+    expect(de('Quiero retruco')).toMatchObject({ 'data-variante': 'luminoso', 'data-tono': 'celeste' });
+    expect(de('Envido')).toMatchObject({ 'data-variante': 'luminoso', 'data-tono': 'celeste' });
+    expect(de('Me voy al mazo')).toMatchObject({ 'data-variante': 'texto' });
   });
 });
 

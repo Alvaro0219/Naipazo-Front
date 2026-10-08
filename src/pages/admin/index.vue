@@ -5,19 +5,18 @@
       <p>Usuarios, bloqueos y ajustes de fichas. Todo ajuste queda registrado en el libro de movimientos.</p>
     </header>
 
-    <q-input
+    <NzCampo
       v-model="search"
-      outlined
-      dense
       clearable
       debounce="350"
-      placeholder="Buscar por usuario o email"
+      label="Buscar"
+      placeholder="Usuario o email"
       class="tr-admin-search"
     >
-      <template #prepend><q-icon name="search" /></template>
-    </q-input>
+      <template #prepend><Icono nombre="buscar" /></template>
+    </NzCampo>
 
-    <LoadingState :loading="firstLoad" :empty="!firstLoad && pagination.rowsNumber === 0" empty-label="No hay usuarios que coincidan." empty-icon="person_search">
+    <LoadingState :loading="firstLoad" :empty="!firstLoad && pagination.rowsNumber === 0" empty-label="No hay usuarios que coincidan." empty-icon="buscarUsuario">
       <q-table
         v-model:pagination="pagination"
         :rows="rows"
@@ -32,17 +31,16 @@
       >
         <template #body-cell-isActive="props">
           <q-td :props="props">
-            <q-badge :color="props.value ? 'positive' : 'negative'" :label="props.value ? 'Activo' : 'Bloqueado'" />
+            <NzChip :tono="props.value ? 'verde' : 'rojo'" :label="props.value ? 'Activo' : 'Bloqueado'" />
           </q-td>
         </template>
         <template #body-cell-actions="props">
           <q-td :props="props" class="tr-admin-actions">
-            <q-btn flat dense no-caps color="primary" label="Fichas" @click="openAdjust(props.row)" />
-            <q-btn
-              flat
-              dense
-              no-caps
-              :color="props.row.isActive ? 'negative' : 'positive'"
+            <NzBoton variante="texto" tamano="sm" label="Fichas" @click="openAdjust(props.row)" />
+            <NzBoton
+              variante="texto"
+              tamano="sm"
+              :tono="props.row.isActive ? 'rojo' : 'celeste'"
               :label="props.row.isActive ? 'Bloquear' : 'Desbloquear'"
               :disable="props.row.id === auth.user?.id"
               @click="toggleActive(props.row)"
@@ -54,24 +52,23 @@
             <div class="tr-admin-card">
               <div class="tr-admin-card__head">
                 <strong>{{ row.username }}</strong>
-                <q-badge :color="row.isActive ? 'positive' : 'negative'" :label="row.isActive ? 'Activo' : 'Bloqueado'" />
-                <q-badge v-if="row.role === 'admin'" color="primary" label="Admin" />
+                <NzChip :tono="row.isActive ? 'verde' : 'rojo'" :label="row.isActive ? 'Activo' : 'Bloqueado'" />
+                <NzChip v-if="row.role === 'admin'" tono="celeste" label="Admin" />
               </div>
               <div class="tr-admin-card__meta">{{ row.email }}</div>
               <div class="tr-admin-card__meta tr-num">
                 {{ formatChips(row.balance) }} fichas · {{ row.stats?.played ?? 0 }} partidas
               </div>
               <div class="tr-admin-actions">
-                <q-btn flat dense no-caps color="primary" label="Ajustar fichas" @click="openAdjust(row)" />
-                <q-btn
-                  flat
-                  dense
-                  no-caps
-                  :color="row.isActive ? 'negative' : 'positive'"
-                  :label="row.isActive ? 'Bloquear' : 'Desbloquear'"
-                  :disable="row.id === auth.user?.id"
-                  @click="toggleActive(row)"
-                />
+                <NzBoton variante="texto" tamano="sm" label="Ajustar fichas" @click="openAdjust(row)" />
+                <NzBoton
+              variante="texto"
+              tamano="sm"
+              :tono="row.isActive ? 'rojo' : 'celeste'"
+              :label="row.isActive ? 'Bloquear' : 'Desbloquear'"
+              :disable="row.id === auth.user?.id"
+              @click="toggleActive(row)"
+            />
               </div>
             </div>
           </div>
@@ -82,36 +79,27 @@
     <IntegrityCard />
     <ChipFlowsCard />
 
-    <q-dialog v-model="adjust.open">
-      <q-card class="tr-adjust">
-        <q-form @submit.prevent="submitAdjust">
-          <q-card-section>
-            <h2 class="tr-adjust__title">Ajustar fichas de {{ adjust.user?.username }}</h2>
-            <p class="tr-adjust__balance tr-num">Saldo actual: {{ formatChips(adjust.user?.balance ?? 0) }}</p>
-          </q-card-section>
-          <q-card-section class="column q-gutter-y-sm">
-            <q-input
-              v-model.number="adjust.amount"
-              type="number"
-              outlined
-              label="Monto (negativo para descontar)"
-              :rules="[(v) => (Number.isInteger(v) && v !== 0) || 'Ingresá un entero distinto de cero']"
-            />
-            <q-input
-              v-model="adjust.reason"
-              outlined
-              label="Motivo"
-              maxlength="200"
-              :rules="[(v) => (v && v.trim().length >= 3) || 'Contá brevemente el motivo']"
-            />
-          </q-card-section>
-          <q-card-actions align="right">
-            <q-btn flat no-caps label="Cancelar" v-close-popup />
-            <q-btn type="submit" color="primary" unelevated no-caps label="Aplicar ajuste" :loading="adjust.saving" />
-          </q-card-actions>
-        </q-form>
-      </q-card>
-    </q-dialog>
+    <NzHoja v-model="adjust.open" :titulo="`Ajustar fichas de ${adjust.user?.username ?? ''}`">
+      <q-form class="column q-gutter-y-md" @submit.prevent="submitAdjust">
+        <p class="tr-adjust__balance tr-num">Saldo actual: {{ formatChips(adjust.user?.balance ?? 0) }}</p>
+        <NzCampo
+          v-model.number="adjust.amount"
+          type="number"
+          label="Monto (negativo para descontar)"
+          :rules="[(v) => (Number.isInteger(v) && v !== 0) || 'Ingresá un entero distinto de cero']"
+        />
+        <NzCampo
+          v-model="adjust.reason"
+          label="Motivo"
+          maxlength="200"
+          :rules="[(v) => (v && v.trim().length >= 3) || 'Contá brevemente el motivo']"
+        />
+        <div class="tr-adjust__acciones">
+          <NzBoton variante="texto" label="Cancelar" @click="adjust.open = false" />
+          <NzBoton type="submit" variante="principal" label="Aplicar ajuste" :loading="adjust.saving" />
+        </div>
+      </q-form>
+    </NzHoja>
   </div>
 </template>
 
@@ -121,6 +109,7 @@ import { useQuasar } from 'quasar';
 import ChipFlowsCard from '../../components/ChipFlowsCard.vue';
 import IntegrityCard from '../../components/IntegrityCard.vue';
 import LoadingState from '../../components/LoadingState.vue';
+import { confirmar } from '../../composables/useConfirmar.js';
 import { usePaginatedList } from '../../composables/usePaginatedList.js';
 import { adjustUserChips, fetchAdminUsers, setUserStatus } from '../../services/api.js';
 import { useAuthStore } from '../../stores/auth.js';
@@ -173,7 +162,7 @@ async function submitAdjust() {
 
 function toggleActive(user) {
   const blocking = user.isActive;
-  $q.dialog({
+  confirmar({
     title: blocking ? `¿Bloquear a ${user.username}?` : `¿Desbloquear a ${user.username}?`,
     message: blocking
       ? 'No va a poder iniciar sesión ni renovar su sesión actual.'
@@ -194,7 +183,7 @@ onMounted(reload);
 </script>
 
 <style scoped>
-.tr-admin-search { max-width: 420px; background: #fff; }
+.tr-admin-search { max-width: 420px; }
 
 .tr-admin-actions {
   display: flex;
@@ -207,7 +196,7 @@ onMounted(reload);
   flex-direction: column;
   gap: 4px;
   padding: 12px 4px;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid var(--linea);
 }
 
 .tr-admin-card__head {
@@ -218,24 +207,22 @@ onMounted(reload);
 }
 
 .tr-admin-card__meta {
-  color: #64748b;
-  font-size: 0.85rem;
+  color: var(--texto-suave);
+  font-size: 14px;
   overflow-wrap: anywhere;
 }
 
 .tr-admin-card .tr-admin-actions { justify-content: flex-start; }
 
-.tr-adjust { width: min(92vw, 420px); }
-
-.tr-adjust__title {
+.tr-adjust__balance {
   margin: 0;
-  font-size: 1.15rem;
-  font-weight: 700;
-  line-height: 1.3;
+  color: var(--texto-suave);
+  font-size: 14px;
 }
 
-.tr-adjust__balance {
-  margin: 4px 0 0;
-  color: #64748b;
+.tr-adjust__acciones {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
 }
 </style>

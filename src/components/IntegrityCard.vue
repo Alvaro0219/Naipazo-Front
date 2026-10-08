@@ -9,8 +9,8 @@
         </p>
       </div>
       <div class="tr-integrity__tools">
-        <q-btn flat no-caps icon="balance" label="Conciliar ahora" :loading="reconciling" @click="runReconcile" />
-        <q-btn flat round icon="refresh" aria-label="Actualizar" :loading="loading" @click="load" />
+        <NzBoton variante="secundario" tamano="sm" icono="balanza" label="Conciliar ahora" :loading="reconciling" @click="runReconcile" />
+        <NzBoton variante="texto" solo-icono icono="actualizar" label="Actualizar" :loading="loading" @click="load" />
       </div>
     </header>
 
@@ -20,16 +20,16 @@
       <span :class="{ 'tr-integrity__count--alert': summary.open.reconciliation }">{{ summary.open.reconciliation }} conciliaciones con diferencias</span>
     </div>
 
-    <LoadingState :loading="loading && !summary" :empty="!loading && !open.length" empty-label="No hay incidentes abiertos." empty-icon="verified_user">
+    <LoadingState :loading="loading && !summary" :empty="!loading && !open.length" empty-label="No hay incidentes abiertos." empty-icon="seguro">
       <ul class="tr-flows__list">
         <li v-for="i in open" :key="i.id" class="tr-flows__item tr-flows__item--alert">
           <div class="tr-flows__pair">
-            <q-badge color="negative" :label="TYPE_LABELS[i.type]" />
+            <NzChip tono="rojo" icono="alerta" :label="TYPE_LABELS[i.type]" />
             <span>{{ i.summary }}</span>
           </div>
           <div class="tr-flows__meta tr-num">
             {{ formatDateTime(i.createdAt) }}<template v-if="i.matchId"> · partida {{ i.matchId }}</template>
-            <q-btn flat dense no-caps size="sm" label="Marcar como revisado" :loading="resolving === i.id" @click="resolve(i)" />
+            <NzBoton variante="texto" tamano="sm" icono="tilde" label="Marcar como revisado" :loading="resolving === i.id" @click="resolve(i)" />
           </div>
         </li>
       </ul>
@@ -112,7 +112,7 @@ onMounted(load);
 
 .tr-flows__header p {
   margin: 4px 0 0;
-  color: #64748b;
+  color: var(--texto-suave);
   font-size: 0.9rem;
 }
 
@@ -127,12 +127,12 @@ onMounted(load);
   flex-wrap: wrap;
   gap: 6px 16px;
   margin-top: 12px;
-  color: #64748b;
+  color: var(--texto-suave);
   font-size: 0.9rem;
 }
 
 .tr-integrity__count--alert {
-  color: #b91c1c;
+  color: var(--rojo);
   font-weight: 600;
 }
 
@@ -148,12 +148,11 @@ onMounted(load);
 .tr-flows__item {
   padding: 10px 12px;
   border-radius: 10px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--linea);
 }
 
 .tr-flows__item--alert {
-  border-color: #fecaca;
-  background: #fef2f2;
+  border-color: var(--rojo);
 }
 
 .tr-flows__pair {
@@ -169,7 +168,7 @@ onMounted(load);
   align-items: center;
   gap: 8px;
   margin-top: 4px;
-  color: #64748b;
+  color: var(--texto-suave);
   font-size: 0.85rem;
 }
 </style>

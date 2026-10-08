@@ -15,7 +15,7 @@
       </section>
 
       <section class="tr-section-card tr-grant-card">
-        <q-icon name="redeem" size="28px" color="accent" />
+        <Icono nombre="regalo" :size="28" class="tr-grant-card__icono" />
         <div>
           <h2>Crédito diario</h2>
           <p v-if="remainingMs !== null">
@@ -36,7 +36,7 @@
         :loading="firstLoad"
         :empty="!firstLoad && pagination.rowsNumber === 0"
         empty-label="Todavía no tenés movimientos."
-        empty-icon="receipt_long"
+        empty-icon="movimientos"
       >
         <q-table
           v-model:pagination="pagination"
@@ -50,7 +50,7 @@
           @request="onRequest"
         >
           <template #body-cell-amount="props">
-            <q-td :props="props" class="tr-num" :class="amountClass(props.value)">
+            <q-td :props="props" class="tr-num" :class="amountToneClass(props.value, props.row.type)">
               {{ formatSignedChips(props.value) }}
             </q-td>
           </template>
@@ -63,7 +63,7 @@
                   <div class="tr-ledger-item__date">{{ formatDateTime(props.row.createdAt) }}</div>
                 </div>
                 <div class="text-right">
-                  <div class="tr-num tr-ledger-item__amount" :class="amountClass(props.row.amount)">
+                  <div class="tr-num tr-ledger-item__amount" :class="amountToneClass(props.row.amount, props.row.type)">
                     {{ formatSignedChips(props.row.amount) }}
                   </div>
                   <div class="tr-num tr-ledger-item__after">Saldo {{ formatChips(props.row.balanceAfter) }}</div>
@@ -86,7 +86,7 @@ import { usePaginatedList } from '../composables/usePaginatedList.js';
 import { fetchLedger } from '../services/api.js';
 import { useWalletStore } from '../stores/wallet.js';
 import {
-  LEDGER_TYPE_LABELS, formatChips, formatDateTime, formatDuration, formatSignedChips
+  LEDGER_TYPE_LABELS, amountToneClass, formatChips, formatDateTime, formatDuration, formatSignedChips
 } from '../utils/format.js';
 
 const wallet = useWalletStore();
@@ -101,10 +101,6 @@ const columns = [
   { name: 'amount', label: 'Monto', field: 'amount', align: 'right' },
   { name: 'balanceAfter', label: 'Saldo', field: 'balanceAfter', align: 'right', format: formatChips, classes: 'tr-num' }
 ];
-
-function amountClass(value) {
-  return value > 0 ? 'text-positive' : value < 0 ? 'text-negative' : '';
-}
 
 // Al llegar a la medianoche se pide la billetera: el backend acredita el nuevo crédito
 const { remainingMs } = useCountdown(computed(() => wallet.nextGrantAt), {
@@ -127,34 +123,36 @@ onMounted(reloadLedger);
   gap: 16px;
 }
 
+/* Panel de saldo (10.6): noche-3, número en Bricolage 44 px blanco (el detalle con la ficha va en N6) */
 .tr-balance-card {
   display: flex;
   flex-direction: column;
   gap: 2px;
   padding: 20px;
-  border-radius: 16px;
-  color: #fff;
-  background:
-    radial-gradient(circle at 100% 0%, rgba(253, 224, 71, 0.25), transparent 50%),
-    #14532d;
+  border-radius: var(--radio-panel);
+  border: 1px solid var(--linea);
+  background: var(--noche-3);
+  color: var(--texto);
 }
 
 .tr-balance-card__label {
-  font-size: 0.85rem;
-  color: rgba(255, 255, 255, 0.75);
+  font-size: 14px;
+  color: var(--texto-suave);
 }
 
 .tr-balance-card__value {
-  font-size: 2.5rem;
-  font-weight: 800;
+  font-family: var(--fuente-titulo);
+  font-size: 44px;
+  font-weight: 700;
   line-height: 1.1;
-  color: #fef9c3;
 }
 
 .tr-balance-card__unit {
-  font-size: 0.85rem;
-  color: rgba(255, 255, 255, 0.75);
+  font-size: 14px;
+  color: var(--texto-suave);
 }
+
+.tr-grant-card__icono { color: var(--celeste); }
 
 .tr-grant-card {
   display: flex;
@@ -166,25 +164,25 @@ onMounted(reloadLedger);
 
 .tr-grant-card p {
   margin: 0 0 4px;
-  color: #334155;
+  color: var(--texto);
 }
 
-.tr-grant-card small { color: #64748b; }
+.tr-grant-card small { color: var(--texto-suave); }
 
 .tr-ledger-item {
   display: flex;
   justify-content: space-between;
   gap: 12px;
   padding: 12px 4px;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid var(--linea);
 }
 
 .tr-ledger-item__type { font-weight: 600; }
 
 .tr-ledger-item__date,
 .tr-ledger-item__after {
-  font-size: 0.8rem;
-  color: #64748b;
+  font-size: 13px;
+  color: var(--texto-suave);
 }
 
 .tr-ledger-item__amount { font-weight: 700; }

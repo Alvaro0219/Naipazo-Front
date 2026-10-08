@@ -1,16 +1,14 @@
 <template>
   <div class="tr-actions">
-    <q-btn
+    <NzBoton
       v-for="action in visible"
       :key="action.type"
       :label="ACTION_LABELS[action.type]"
-      :color="action.color"
-      :text-color="action.textColor"
-      :outline="action.outline"
-      :flat="action.flat"
+      :variante="action.variante"
+      :tono="action.tono"
+      :icono="action.icono"
+      :tamano="action.tamano"
       :disable="disabled"
-      no-caps
-      unelevated
       class="tr-actions__btn"
       @click="$emit('action', action.type)"
     />
@@ -21,17 +19,18 @@
 import { computed } from 'vue';
 import { ACTION_LABELS } from '../../utils/cards.js';
 
-// Orden y estilo de cada botón. Qué botones aparecen lo decide el servidor (availableActions).
+// Orden y estilo de cada botón (ESTILOS_NAIPAZO.md, 6.6). Qué botones aparecen lo decide el servidor (availableActions).
+// "Quiero" siempre verde con tilde y "No quiero" siempre rojo con cruz; los cantos, luminosos celestes; el mazo, texto.
 const STYLES = [
-  { type: 'ACCEPT', color: 'positive' },
-  { type: 'REJECT', color: 'negative' },
-  { type: 'CALL_TRUCO', color: 'accent', textColor: 'dark' },
-  { type: 'CALL_RETRUCO', color: 'accent', textColor: 'dark' },
-  { type: 'CALL_VALE_CUATRO', color: 'accent', textColor: 'dark' },
-  { type: 'CALL_ENVIDO', color: 'white', outline: true },
-  { type: 'CALL_REAL_ENVIDO', color: 'white', outline: true },
-  { type: 'CALL_FALTA_ENVIDO', color: 'white', outline: true },
-  { type: 'GO_TO_DECK', color: 'white', flat: true }
+  { type: 'ACCEPT', variante: 'luminoso', tono: 'verde', icono: 'tilde', tamano: 'xl' },
+  { type: 'REJECT', variante: 'luminoso', tono: 'rojo', icono: 'cerrar', tamano: 'xl' },
+  { type: 'CALL_TRUCO', variante: 'luminoso', tono: 'celeste', tamano: 'lg' },
+  { type: 'CALL_RETRUCO', variante: 'luminoso', tono: 'celeste', tamano: 'lg' },
+  { type: 'CALL_VALE_CUATRO', variante: 'luminoso', tono: 'celeste', tamano: 'lg' },
+  { type: 'CALL_ENVIDO', variante: 'luminoso', tono: 'celeste', tamano: 'lg' },
+  { type: 'CALL_REAL_ENVIDO', variante: 'luminoso', tono: 'celeste', tamano: 'lg' },
+  { type: 'CALL_FALTA_ENVIDO', variante: 'luminoso', tono: 'celeste', tamano: 'lg' },
+  { type: 'GO_TO_DECK', variante: 'texto', tono: 'celeste', tamano: 'md' }
 ];
 
 const props = defineProps({
@@ -49,11 +48,6 @@ const visible = computed(() => STYLES.filter((s) => props.available.includes(s.t
   flex-wrap: wrap;
   justify-content: center;
   gap: 8px;
-  min-height: 44px;
-}
-
-.tr-actions__btn {
-  min-height: 44px;
-  font-weight: 700;
+  min-height: 48px;
 }
 </style>

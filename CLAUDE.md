@@ -107,5 +107,7 @@ el corte de red se simula con `setOffline` + `window.__socketDebug.socket` (solo
   (oro premio, verde devolución, suave lo que sale: perder nunca es rojo). Muestras en `/dev/componentes` y `/dev/cartas`.
   Los comentarios de un componente van en el `<script>`, no antes de la raíz del `<template>` (en desarrollo rompen la herencia de
   clases). Créditos en `CREDITS.md`. Sin commits hasta que el dueño apruebe cada hito.
+  Acceso: las cinco pantallas usan `components/AuthMarco.vue` (Sol, Naipazo y el formulario en un panel). Apuesta e
+  inscripción de "Crear partida": `components/ApuestaSelector.vue` (chips rápidos y − / + de a 500, tope en saldo y `maxBet`).
 - Git: siempre en `main`, sin ramas nuevas; no hacer push sin confirmarlo.
 - Despliegue en Cloudflare Pages; `public/_redirects` resuelve el ruteo SPA.

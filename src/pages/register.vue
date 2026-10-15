@@ -1,101 +1,92 @@
 <template>
-  <div class="tr-auth-shell">
-    <div class="tr-auth-card">
-      <div class="tr-auth-brand">
-        <SolDeMayo :size="40" />
-        <div>
-          <strong>Creá tu cuenta</strong>
-          <span>Recibís 1000 fichas virtuales gratis por día</span>
-        </div>
-      </div>
+  <AuthMarco titulo="Creá tu cuenta" subtitulo="Recibís 1.000 fichas virtuales gratis por día.">
+    <q-form ref="formRef" class="column q-gutter-y-md" greedy @submit.prevent="handleSubmit">
+      <NzCampo
+        v-model="form.username"
+        label="Nombre de usuario"
+        maxlength="20"
+        autocomplete="username"
+        autocapitalize="off"
+        hint="3 a 20 caracteres: letras, números, “_” y “.”. No se puede cambiar después."
+        :rules="[rules.username]"
+        :error="!!fieldErrors.username"
+        :error-message="fieldErrors.username"
+        :loading="checking.username"
+      >
+        <template v-if="available.username" #append>
+          <Icono nombre="ok" label="Disponible" class="tr-disponible" />
+        </template>
+      </NzCampo>
 
-      <q-form ref="formRef" class="column q-gutter-y-md" greedy @submit.prevent="handleSubmit">
-        <NzCampo
-          v-model="form.username"
-          label="Nombre de usuario"
-          maxlength="20"
-          autocomplete="username"
-          autocapitalize="off"
-          hint="3 a 20 caracteres: letras, números, “_” y “.”. No se puede cambiar después."
-          :rules="[rules.username]"
-          :error="!!fieldErrors.username"
-          :error-message="fieldErrors.username"
-          :loading="checking.username"
-        >
-          <template v-if="available.username" #append>
-            <Icono nombre="ok" label="Disponible" class="tr-disponible" />
-          </template>
-        </NzCampo>
+      <NzCampo
+        v-model="form.email"
+        label="Email"
+        type="email"
+        autocomplete="email"
+        autocapitalize="off"
+        :rules="[rules.email]"
+        :error="!!fieldErrors.email"
+        :error-message="fieldErrors.email"
+        :loading="checking.email"
+      >
+        <template v-if="available.email" #append>
+          <Icono nombre="ok" label="Disponible" class="tr-disponible" />
+        </template>
+      </NzCampo>
 
-        <NzCampo
-          v-model="form.email"
-          label="Email"
-          type="email"
-          autocomplete="email"
-          autocapitalize="off"
-          :rules="[rules.email]"
-          :error="!!fieldErrors.email"
-          :error-message="fieldErrors.email"
-          :loading="checking.email"
-        >
-          <template v-if="available.email" #append>
-            <Icono nombre="ok" label="Disponible" class="tr-disponible" />
-          </template>
-        </NzCampo>
+      <NzCampo
+        v-model="form.password"
+        label="Contraseña"
+        :type="showPassword ? 'text' : 'password'"
+        autocomplete="new-password"
+        hint="Mínimo 8 caracteres"
+        :rules="[rules.password]"
+        lazy-rules
+      >
+        <template #append>
+          <button
+            type="button"
+            class="nz-campo-boton"
+            :aria-label="showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+            @click="showPassword = !showPassword"
+          >
+            <Icono :nombre="showPassword ? 'ocultar' : 'ver'" />
+          </button>
+        </template>
+      </NzCampo>
 
-        <NzCampo
-          v-model="form.password"
-          label="Contraseña"
-          :type="showPassword ? 'text' : 'password'"
-          autocomplete="new-password"
-          hint="Mínimo 8 caracteres"
-          :rules="[rules.password]"
-          lazy-rules
-        >
-          <template #append>
-            <button
-              type="button"
-              class="nz-campo-boton"
-              :aria-label="showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'"
-              @click="showPassword = !showPassword"
-            >
-              <Icono :nombre="showPassword ? 'ocultar' : 'ver'" />
-            </button>
-          </template>
-        </NzCampo>
+      <NzCampo
+        v-model="form.confirm"
+        label="Repetí la contraseña"
+        :type="showPassword ? 'text' : 'password'"
+        autocomplete="new-password"
+        :rules="[(v) => v === form.password || 'Las contraseñas no coinciden']"
+        lazy-rules
+      />
 
-        <NzCampo
-          v-model="form.confirm"
-          label="Repetí la contraseña"
-          :type="showPassword ? 'text' : 'password'"
-          autocomplete="new-password"
-          :rules="[(v) => v === form.password || 'Las contraseñas no coinciden']"
-          lazy-rules
-        />
+      <ChipsNotice class="q-my-sm" />
 
-        <ChipsNotice class="q-my-sm" />
+      <q-checkbox v-model="form.acceptTerms" dense class="tr-check" aria-label="Acepto los términos y condiciones y la política de privacidad">
+        Acepto los <router-link to="/terminos" target="_blank">términos y condiciones</router-link>
+        y la <router-link to="/privacidad" target="_blank">política de privacidad</router-link>
+      </q-checkbox>
+      <q-checkbox v-model="form.confirmAdult" dense class="tr-check" label="Declaro que soy mayor de 18 años" />
+      <div v-if="checkboxError" class="tr-check-error" role="alert">{{ checkboxError }}</div>
 
-        <q-checkbox v-model="form.acceptTerms" dense class="tr-check" aria-label="Acepto los términos y condiciones y la política de privacidad">
-          Acepto los <router-link to="/terminos" target="_blank">términos y condiciones</router-link>
-          y la <router-link to="/privacidad" target="_blank">política de privacidad</router-link>
-        </q-checkbox>
-        <q-checkbox v-model="form.confirmAdult" dense class="tr-check" label="Declaro que soy mayor de 18 años" />
-        <div v-if="checkboxError" class="tr-check-error" role="alert">{{ checkboxError }}</div>
+      <NzBoton type="submit" variante="principal" tamano="lg" bloque label="Crear cuenta" :loading="loading" class="q-mt-md" />
+    </q-form>
 
-        <NzBoton type="submit" variante="principal" tamano="lg" bloque label="Crear cuenta" :loading="loading" class="q-mt-md" />
-      </q-form>
-
-      <div class="tr-auth-footer">
-        ¿Ya tenés cuenta? <router-link to="/login">Iniciá sesión</router-link>
-      </div>
+    <div class="tr-auth-footer">
+      ¿Ya tenés cuenta? <router-link to="/login">Iniciá sesión</router-link>
     </div>
-  </div>
+  </AuthMarco>
 </template>
 
 <script setup>
 import { reactive, ref, watch } from 'vue';
 import { debounce, useQuasar } from 'quasar';
 import { useRouter } from 'vue-router';
+import AuthMarco from '../components/AuthMarco.vue';
 import ChipsNotice from '../components/ChipsNotice.vue';
 import { checkAvailability } from '../services/api.js';
 import { useAuthStore } from '../stores/auth.js';

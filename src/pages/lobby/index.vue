@@ -3,9 +3,14 @@
     <EmailVerifyBanner />
 
     <header class="tr-lobby-header">
-      <div class="tr-page-header">
-        <h1>Partidas</h1>
-        <p>Sumate a una mesa o a un torneo, o creá tu propia partida.</p>
+      <div class="tr-lobby-titulo">
+        <div class="tr-page-header">
+          <h1>Partidas</h1>
+          <p>Sumate a una mesa o a un torneo, o creá tu propia partida.</p>
+        </div>
+        <span class="tr-lobby-live" :class="{ 'tr-lobby-live--on': status === 'connected' }">
+          <span class="tr-lobby-live__dot" />{{ status === 'connected' ? 'En vivo' : 'Conectando…' }}
+        </span>
       </div>
       <div class="tr-lobby-actions">
         <NzBoton variante="principal" icono="mas" label="Crear partida" :disable="busy" @click="showCreate = true" />
@@ -29,22 +34,20 @@
       </template>
     </NzAviso>
 
+    <!-- Filtros a todo el ancho: alineados con las tarjetas -->
     <div class="tr-lobby-filters">
-      <div class="tr-lobby-filters__group">
-        <NzSegmentado
-          v-model="kindFilter"
-          aria-label="Tipo de partida"
-          :opciones="[{ label: 'Todas', value: 'all' }, { label: 'Mesas', value: 'room' }, { label: 'Torneos', value: 'tournament' }]"
-        />
-        <NzSegmentado
-          v-model="modeFilter"
-          aria-label="Modo"
-          :opciones="[{ label: 'Todos', value: 'all' }, { label: '1 vs 1', value: '1v1' }, { label: '2 vs 2', value: '2v2' }]"
-        />
-      </div>
-      <span class="tr-lobby-live" :class="{ 'tr-lobby-live--on': status === 'connected' }">
-        <span class="tr-lobby-live__dot" />{{ status === 'connected' ? 'En vivo' : 'Conectando…' }}
-      </span>
+      <NzSegmentado
+        v-model="kindFilter"
+        bloque
+        aria-label="Tipo de partida"
+        :opciones="[{ label: 'Todas', value: 'all' }, { label: 'Mesas', value: 'room' }, { label: 'Torneos', value: 'tournament' }]"
+      />
+      <NzSegmentado
+        v-model="modeFilter"
+        bloque
+        aria-label="Modo"
+        :opciones="[{ label: 'Todos', value: 'all' }, { label: '1 vs 1', value: '1v1' }, { label: '2 vs 2', value: '2v2' }]"
+      />
     </div>
 
     <LoadingState
@@ -57,79 +60,89 @@
       <ul class="tr-game-list">
         <li v-for="item in items" :key="`${item.kind}-${item.data.id}`">
           <!-- Mesa: 1 vs 1 o 2 vs 2 -->
-          <div v-if="item.kind === 'room'" class="tr-game tr-game--room">
-            <span class="tr-game__kind"><Icono :nombre="is2v2(item.data) ? 'pareja' : 'naipe'" :size="16" />{{ is2v2(item.data) ? 'Mesa 2 vs 2' : 'Mesa' }}</span>
+          <div
+            v-if="item.kind === 'room'"
+            class="tr-game"
+            :class="{ 'tr-game--sin-fichas': !isMine(item.data) && !canAfford(item.data.config.bet) }"
+          >
+            <Avatar :nombre="item.data.seats[0]?.username || ''" :size="36" />
             <div class="tr-game__main">
-              <strong>{{ item.data.seats[0]?.username }} <span class="tr-game__code">{{ item.data.code }}</span></strong>
-              <span class="tr-game__meta">
-                <template v-if="is2v2(item.data)"><strong class="tr-num">{{ item.data.seats.length }} de 4</strong> · </template>
-                A {{ item.data.config.targetPoints }}
-                <span v-if="item.data.config.bet" class="tr-game__chips">{{ formatChips(item.data.config.bet) }} fichas</span>
-                <template v-else>· gratis</template>
-              </span>
-              <span v-if="is2v2(item.data)" class="tr-game__meta">{{ teamsLabel(item.data) }}</span>
+              <div class="tr-game__titulo">
+                <strong>{{ item.data.seats[0]?.username }}</strong>
+              </div>
+              <div class="tr-game__chips">
+                <NzChip :label="`A ${item.data.config.targetPoints}`" />
+                <template v-if="is2v2(item.data)">
+                  <NzChip icono="pareja" label="2 vs 2" />
+                  <NzChip class="tr-num" :label="`${item.data.seats.length} de 4`" />
+                </template>
+                <span v-if="item.data.config.bet" class="tr-game__monto tr-num">
+                  <Ficha :size="16" /> {{ formatChips(item.data.config.bet) }}<span class="nz-sr"> fichas de apuesta</span>
+                </span>
+                <NzChip v-else label="Gratis" />
+              </div>
             </div>
-            <NzBoton
-              v-if="item.data.seats.some((x) => x.userId === auth.user?.id)"
-              variante="secundario"
-              label="Tu mesa"
-              :to="`/mesa/${item.data.id}`"
-            />
-            <NzBoton
-              v-else-if="is2v2(item.data) && item.data.seats.length >= 4"
-              variante="secundario"
-              label="Completa"
-              disable
-            />
-            <NzBoton
-              v-else
-              variante="luminoso"
-              :label="canAfford(item.data.config.bet) ? 'Unirme' : 'Sin fichas'"
-              :disable="busy || !canAfford(item.data.config.bet)"
-              :loading="joiningId === item.data.id"
-              @click="handleJoinRoom(item.data)"
-            />
+            <div class="tr-game__accion">
+              <NzBoton v-if="isMine(item.data)" variante="secundario" tamano="sm" label="Tu mesa" :to="`/mesa/${item.data.id}`" />
+              <NzBoton
+                v-else-if="is2v2(item.data) && item.data.seats.length >= 4"
+                variante="secundario"
+                tamano="sm"
+                label="Completa"
+                disable
+              />
+              <span v-else-if="!canAfford(item.data.config.bet)" class="tr-game__motivo">
+                Te faltan {{ formatChips(missing(item.data.config.bet)) }} fichas
+              </span>
+              <NzBoton
+                v-else
+                variante="luminoso"
+                tamano="sm"
+                label="Unirme"
+                :disable="busy"
+                :loading="joiningId === item.data.id"
+                @click="handleJoinRoom(item.data)"
+              />
+            </div>
           </div>
 
           <!-- Torneo: 4 u 8 jugadores, eliminación directa -->
-          <div v-else class="tr-game tr-game--tournament">
-            <span class="tr-game__kind tr-game__kind--tournament"><Icono nombre="trofeo" :size="16" />Torneo</span>
+          <div
+            v-else
+            class="tr-game"
+            :class="{ 'tr-game--sin-fichas': !isEntrant(item.data) && !canAfford(item.data.config.buyIn) }"
+          >
+            <span class="tr-game__trofeo" aria-hidden="true"><Icono nombre="trofeo" :size="18" /></span>
             <router-link :to="`/torneos/${item.data.id}`" class="tr-game__main">
-              <strong>{{ hostName(item.data) }} <span class="tr-game__code">{{ item.data.code }}</span></strong>
-              <span class="tr-game__meta">
-                {{ item.data.config.size }} jugadores · A {{ item.data.config.targetPoints }} ·
-                <template v-if="item.data.config.buyIn">inscripción {{ formatChips(item.data.config.buyIn) }}</template>
-                <template v-else>gratis</template>
-              </span>
-              <span class="tr-game__seats">
-                <q-linear-progress
-                  :value="item.data.entrants.length / item.data.config.size"
-                  color="primary"
-                  track-color="secondary"
-                  rounded
-                  size="6px"
-                  class="tr-game__bar"
-                />
-                <span class="tr-num">{{ item.data.entrants.length }} de {{ item.data.config.size }}</span>
-                <span v-if="item.data.config.buyIn" class="tr-game__premio tr-num">
-                  <Icono nombre="trofeo" :size="14" /> {{ formatChips(item.data.prize) }}
+              <div class="tr-game__titulo">
+                <span class="tr-game__etiqueta">Torneo</span>
+                <strong>{{ hostName(item.data) }}</strong>
+              </div>
+              <!-- Misma información que una mesa: puntos, cupos y el premio en dorado (la inscripción está en la confirmación) -->
+              <div class="tr-game__chips">
+                <NzChip :label="`A ${item.data.config.targetPoints}`" />
+                <NzChip class="tr-num" :label="`${item.data.entrants.length} de ${item.data.config.size}`" />
+                <span v-if="item.data.config.buyIn" class="tr-game__monto tr-num">
+                  <Ficha :size="16" /> {{ formatChips(item.data.prize) }}<span class="nz-sr"> fichas de premio</span>
                 </span>
-              </span>
+                <NzChip v-else label="Gratis" />
+              </div>
             </router-link>
-            <NzBoton
-              v-if="isEntrant(item.data)"
-              variante="secundario"
-              label="Ver"
-              :to="`/torneos/${item.data.id}`"
-            />
-            <NzBoton
-              v-else
-              variante="luminoso"
-              :label="canAfford(item.data.config.buyIn) ? 'Inscribirme' : 'Sin fichas'"
-              :disable="busy || !canAfford(item.data.config.buyIn)"
-              :loading="joiningId === item.data.id"
-              @click="handleJoinTournament(item.data)"
-            />
+            <div class="tr-game__accion">
+              <NzBoton v-if="isEntrant(item.data)" variante="secundario" tamano="sm" label="Ver" :to="`/torneos/${item.data.id}`" />
+              <span v-else-if="!canAfford(item.data.config.buyIn)" class="tr-game__motivo">
+                Te faltan {{ formatChips(missing(item.data.config.buyIn)) }} fichas
+              </span>
+              <NzBoton
+                v-else
+                variante="luminoso"
+                tamano="sm"
+                label="Inscribirme"
+                :disable="busy"
+                :loading="joiningId === item.data.id"
+                @click="handleJoinTournament(item.data)"
+              />
+            </div>
           </div>
         </li>
       </ul>
@@ -184,9 +197,9 @@ const items = computed(() => [
   .sort((a, b) => new Date(b.data.createdAt) - new Date(a.data.createdAt)));
 
 const emptyLabel = computed(() => {
-  if (kindFilter.value === 'room') return 'No hay mesas abiertas. ¡Creá una y esperá rival!';
-  if (kindFilter.value === 'tournament') return 'No hay torneos con inscripción abierta. ¡Creá uno!';
-  return 'No hay partidas abiertas. ¡Creá una mesa o un torneo!';
+  if (kindFilter.value === 'room') return 'Todavía no hay mesas abiertas. Creá la primera.';
+  if (kindFilter.value === 'tournament') return 'Todavía no hay torneos abiertos. Creá el primero.';
+  return 'Todavía no hay partidas abiertas. Creá la primera.';
 });
 
 function is2v2(room) {
@@ -195,14 +208,6 @@ function is2v2(room) {
 
 function modeOf(item) {
   return item.kind === 'room' && is2v2(item.data) ? '2v2' : '1v1';
-}
-
-/** "Pareja A: Juan, Ana · Pareja B: Leo" (asientos 0 y 2 contra 1 y 3) */
-function teamsLabel(room) {
-  return [0, 1].map((team) => {
-    const names = room.seats.filter((x) => x.team === team).map((x) => x.username);
-    return `Pareja ${team === 0 ? 'A' : 'B'}: ${names.length ? names.join(', ') : 'libre'}`;
-  }).join(' · ');
 }
 
 function hostName(t) {
@@ -215,6 +220,15 @@ function isEntrant(t) {
 
 function canAfford(chips) {
   return !chips || (wallet.balance ?? 0) >= chips;
+}
+
+/** Cuántas fichas te faltan para poder entrar (para el motivo de una partida que no podés pagar). */
+function missing(chips) {
+  return Math.max(0, chips - (wallet.balance ?? 0));
+}
+
+function isMine(room) {
+  return room.seats.some((x) => x.userId === auth.user?.id);
 }
 
 function onRooms(list) {
@@ -308,29 +322,31 @@ onBeforeUnmount(() => {
 <style scoped>
 .tr-lobby-header {
   display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  flex-wrap: wrap;
+  flex-direction: column;
   gap: 12px;
 }
 
-.tr-lobby-actions {
+.tr-lobby-titulo {
   display: flex;
-  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.tr-lobby-titulo .tr-lobby-live { flex-shrink: 0; margin-top: 8px; }
+
+/* Los dos botones ocupan la fila completa, mitad y mitad: mismo ancho que las tarjetas */
+.tr-lobby-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 8px;
 }
 
+.tr-lobby-actions > * { width: 100%; }
+
 .tr-lobby-filters {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.tr-lobby-filters__group {
-  display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   gap: 8px;
 }
 
@@ -367,32 +383,36 @@ onBeforeUnmount(() => {
   margin: 0;
   padding: 0;
   display: grid;
+  /* minmax(0, 1fr): sin esto una tarjeta con texto largo ensancha la grilla y la página se desborda */
+  grid-template-columns: minmax(0, 1fr);
   gap: 10px;
 }
 
+/* Fila (10.2): panel noche-2 que no brilla; la luz está solo en "Unirme" */
 .tr-game {
-  position: relative;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 14px 16px;
+  gap: 10px;
+  padding: 10px 12px;
   border-radius: var(--radio-panel);
   background: var(--noche-2);
   border: 1px solid var(--linea);
-  overflow: hidden;
 }
 
-.tr-game__kind {
-  position: absolute;
-  top: 8px;
-  right: 12px;
+/* No te alcanzan las fichas: atenuada y con el motivo (el motivo conserva su contraste) */
+.tr-game--sin-fichas > :not(.tr-game__accion) { opacity: 0.55; }
+
+.tr-game__trofeo {
+  flex-shrink: 0;
   display: inline-flex;
   align-items: center;
-  gap: 3px;
-  color: var(--texto-suave);
-  font-size: 12px;
-  font-weight: 600;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--noche-3);
+  border: 1px solid var(--linea);
+  color: var(--celeste);
 }
 
 .tr-game__main {
@@ -400,65 +420,60 @@ onBeforeUnmount(() => {
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 4px;
   color: inherit;
   text-decoration: none;
 }
 
-.tr-game__main strong {
+.tr-game__titulo {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+}
+
+.tr-game__titulo strong {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.tr-game__code {
-  margin-left: 6px;
-  color: var(--texto-suave);
+.tr-game__etiqueta {
+  flex-shrink: 0;
+  color: var(--celeste);
   font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-}
-
-.tr-game__meta {
-  color: var(--texto-suave);
-  font-size: 14px;
+  font-weight: 700;
 }
 
 .tr-game__chips {
-  display: inline-flex;
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 3px;
-  margin-left: 4px;
-  padding: 1px 8px;
-  border-radius: 999px;
-  border: 1px solid var(--linea);
-  color: var(--texto-suave);
-  font-weight: 600;
-  font-size: 13px;
+  gap: 4px 6px;
 }
 
-/* Premio del torneo: oro (10.2) */
-.tr-game__premio {
+/* Monto de la partida (apuesta de la mesa o premio del torneo): ficha y número en dorado, pedido del dueño */
+.tr-game__monto {
   display: inline-flex;
   align-items: center;
   gap: 4px;
   color: var(--oro);
+  font-family: var(--fuente-titulo);
+  font-size: 14px;
   font-weight: 700;
 }
 
-.tr-game__seats {
+.tr-game__accion {
+  flex-shrink: 0;
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  gap: 6px 8px;
-  white-space: nowrap;
+}
+
+.tr-game__motivo {
+  max-width: 96px;
   color: var(--texto-suave);
   font-size: 13px;
   font-weight: 600;
+  text-align: right;
 }
-
-.tr-game__bar { flex: 0 1 110px; min-width: 50px; }
-
-/* El botón no tapa la etiqueta de tipo */
-.tr-game > .nz-boton { margin-top: 14px; }
 </style>

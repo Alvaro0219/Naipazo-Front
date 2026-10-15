@@ -18,7 +18,7 @@ test('sala privada por código: no aparece en el lobby y se entra con el código
   // Otro jugador no la ve en el lobby
   await guest.page.goto('/');
   await expect(guest.page.getByRole('heading', { name: 'Partidas' })).toBeVisible();
-  await expect(guest.page.locator('.tr-game', { hasText: code })).toHaveCount(0);
+  await expect(guest.page.locator('.tr-game', { hasText: hostSession.user.username })).toHaveCount(0);
 
   // Se une con el código, escrito en minúsculas
   await guest.page.getByRole('button', { name: 'Sala privada' }).click();

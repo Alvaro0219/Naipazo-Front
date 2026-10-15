@@ -1,36 +1,27 @@
 <template>
-  <div class="tr-auth-shell">
-    <div class="tr-auth-card">
-      <div class="tr-auth-brand">
-        <SolDeMayo :size="40" />
-        <div>
-          <strong>Verificar email</strong>
-          <span>Naipazo</span>
-        </div>
-      </div>
+  <AuthMarco titulo="Verificar email">
+    <LoadingState v-if="state === 'loading'" loading label="Verificando tu email…" :skeleton-rows="1" />
 
-      <LoadingState v-if="state === 'loading'" loading label="Verificando tu email…" :skeleton-rows="1" />
+    <NzAviso v-else-if="state === 'ok'" tono="verde" icono="verificado">
+      ¡Listo! Tu email quedó verificado. Desde ahora recibís tus fichas diarias.
+    </NzAviso>
 
-      <NzAviso v-else-if="state === 'ok'" tono="verde" icono="verificado">
-        ¡Listo! Tu email quedó verificado. Desde ahora recibís tus fichas diarias.
-      </NzAviso>
+    <NzAviso v-else tono="rojo">
+      {{ errorMessage }}
+    </NzAviso>
 
-      <NzAviso v-else tono="rojo">
-        {{ errorMessage }}
-      </NzAviso>
-
-      <div class="tr-auth-footer">
-        <router-link :to="auth.isAuthenticated ? '/' : '/login'">
-          {{ auth.isAuthenticated ? 'Ir a las partidas' : 'Entrar' }}
-        </router-link>
-      </div>
+    <div class="tr-auth-footer">
+      <router-link :to="auth.isAuthenticated ? '/' : '/login'">
+        {{ auth.isAuthenticated ? 'Ir a las partidas' : 'Entrar' }}
+      </router-link>
     </div>
-  </div>
+  </AuthMarco>
 </template>
 
 <script setup>
 import { onMounted, ref } from 'vue';
 import { useRoute } from 'vue-router';
+import AuthMarco from '../components/AuthMarco.vue';
 import LoadingState from '../components/LoadingState.vue';
 import { verifyEmailApi } from '../services/api.js';
 import { useAuthStore } from '../stores/auth.js';

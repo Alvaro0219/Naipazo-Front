@@ -17,7 +17,7 @@ test('2 vs 2 con apuesta: asientos, seña al compañero, reconexión, partida co
   for (const p of [p1, p2]) {
     await p.page.goto('/');
     await p.page.locator('.tr-lobby-filters button', { hasText: '2 vs 2' }).click();
-    const item = p.page.locator('.tr-game', { hasText: room.code });
+    const item = p.page.locator('.tr-game', { hasText: sessions[0].user.username });
     await expect(item).toContainText('de 4');
     await item.getByRole('button', { name: 'Unirme' }).click();
     await p.page.locator('.q-dialog').getByRole('button', { name: 'Jugar' }).click();
@@ -90,16 +90,17 @@ test('2 vs 2 con apuesta: asientos, seña al compañero, reconexión, partida co
   const after = await Promise.all(sessions.map((s) => api(request, s, 'GET', '/wallet').then((w) => w.balance)));
   expect(after).toEqual([1200, 800, 1200, 800]);
 
-  // Historial, ranking y perfil por modo
+  // Historial, ranking y perfil
   await p0.page.goto('/historial');
   const first = p0.page.locator('.tr-match').first();
   await expect(first).toContainText('2 vs 2');
   await expect(first).toContainText(`con ${sessions[2].user.username} vs`);
   await p3.page.goto('/historial');
   await expect(p3.page.locator('.tr-match').first()).toContainText('Abandonó tu compañero');
+  // Ranking del mes por fichas, sin filtros: el 2 vs 2 cuenta y tu fila dice (vos)
   await p0.page.goto('/ranking');
-  await p0.page.locator('.tr-ranking-filters button', { hasText: '2 vs 2' }).click();
-  await expect(p0.page.locator('tbody tr', { hasText: sessions[0].user.username })).toBeVisible();
+  await expect(p0.page.locator('.tr-ranking__fila--vos')).toContainText(sessions[0].user.username);
+  await expect(p0.page.locator('.tr-ranking__fila--vos')).toContainText('(vos)');
   await p0.page.goto('/perfil');
   await p0.page.locator('button', { hasText: '2 vs 2' }).click();
   await expect(p0.page.locator('.tr-stat', { hasText: 'Jugadas' })).toContainText('2');

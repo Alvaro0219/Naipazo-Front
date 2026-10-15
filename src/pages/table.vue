@@ -45,8 +45,9 @@
       <!-- Sala en espera 2 vs 2: asientos por pareja (los libres se tocan para cambiarse) -->
       <div v-else-if="game.room?.status === 'waiting' && game.is2v2" class="tr-table__center">
         <template v-if="game.room.seats.length < 4">
+          <div class="nz-anillo" aria-hidden="true" />
           <h2>Esperando jugadores · {{ game.room.seats.length }} de 4</h2>
-          <p>Compañeros enfrentados: la pareja A juega contra la pareja B. Tocá un lugar libre para cambiarte.</p>
+          <p>Compañeros enfrentados. Tocá un lugar libre para cambiarte.</p>
         </template>
         <template v-else>
           <h2>¡Mesa completa! Confirmen para empezar · {{ readyCount }} de 4</h2>
@@ -54,7 +55,7 @@
         </template>
         <div class="tr-wait4">
           <div v-for="team in [0, 1]" :key="team" class="tr-wait4__team">
-            <span class="tr-wait4__team-name">Pareja {{ team === 0 ? 'A' : 'B' }}</span>
+            <span class="tr-wait4__team-name">{{ team === myWaitingTeam ? 'Nosotros' : 'Ellos' }}</span>
             <button
               v-for="seatNo in [team, team + 2]"
               :key="seatNo"
@@ -69,9 +70,14 @@
             </button>
           </div>
         </div>
-        <div class="tr-table__code tr-num">{{ game.room.code }}</div>
+        <div class="tr-espera__chips">
+          <NzChip :label="`A ${game.room.config.targetPoints}`" />
+          <NzChip :label="betLabel" />
+          <NzChip :icono="game.is2v2 ? 'pareja' : ''" :label="game.is2v2 ? '2 vs 2' : '1 vs 1'" />
+          <NzChip v-if="game.room.config.isPrivate" icono="candado" label="Privada" />
+        </div>
+        <div class="tr-table__code tr-num" :aria-label="`Código de la mesa: ${game.room.code.split('').join(' ')}`">{{ game.room.code }}</div>
         <NzBoton
-          v-if="game.room.config.isPrivate"
           variante="secundario"
           :icono="copied ? 'tilde' : 'copiar'"
           :label="copied ? 'Código copiado' : 'Copiar código'"
@@ -94,15 +100,20 @@
         <div class="nz-anillo" aria-hidden="true" />
         <h2>Esperando un rival…</h2>
         <p v-if="game.room.config.isPrivate">Sala privada: pasale este código a quien quieras que juegue.</p>
-        <p v-else>Tu mesa ya aparece en el lobby con este código:</p>
-        <div class="tr-table__code tr-num">{{ game.room.code }}</div>
+        <p v-else>Tu mesa ya aparece en el lobby con este código.</p>
+        <div class="tr-table__code tr-num" :aria-label="`Código de la mesa: ${game.room.code.split('').join(' ')}`">{{ game.room.code }}</div>
         <NzBoton
-          v-if="game.room.config.isPrivate"
           variante="secundario"
           :icono="copied ? 'tilde' : 'copiar'"
           :label="copied ? 'Código copiado' : 'Copiar código'"
           @click="copyCode"
         />
+        <div class="tr-espera__chips">
+          <NzChip :label="`A ${game.room.config.targetPoints}`" />
+          <NzChip :label="betLabel" />
+          <NzChip :icono="game.is2v2 ? 'pareja' : ''" :label="game.is2v2 ? '2 vs 2' : '1 vs 1'" />
+          <NzChip v-if="game.room.config.isPrivate" icono="candado" label="Privada" />
+        </div>
         <NzBoton variante="secundario" tono="rojo" label="Cancelar mesa" :loading="cancelling" @click="handleCancel" />
       </div>
 
@@ -255,7 +266,13 @@ async function copyCode() {
 
 const betLabel = computed(() => {
   const bet = game.room?.config?.bet;
-  return bet ? `${formatChips(bet)} fichas` : 'gratis';
+  return bet ? `${formatChips(bet)} fichas` : 'Gratis';
+});
+
+// Sala de espera 2 vs 2: mi pareja es "Nosotros" (equipo = asiento % 2)
+const myWaitingTeam = computed(() => {
+  const mine = game.room?.seats?.find((x) => x.userId === auth.user?.id);
+  return mine ? mine.seat % 2 : 0;
 });
 
 const iWon = computed(() => game.finished?.winnerTeam === game.myTeam);
@@ -487,6 +504,13 @@ watch(() => route.params.roomId, (id) => id && game.enterRoom(id));
   font-size: 40px;
   font-weight: 700;
   letter-spacing: 0.2em;
+}
+
+.tr-espera__chips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
 }
 
 .tr-wait4 {

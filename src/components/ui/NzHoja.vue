@@ -3,13 +3,11 @@
     ref="dialogo"
     v-bind="$attrs"
     :model-value="modelValue"
-    :position="esCelular ? 'bottom' : 'standard'"
     :maximized="false"
     @update:model-value="(v) => emit('update:modelValue', v)"
     @hide="emit('hide')"
   >
-    <div class="nz-hoja" :class="{ 'nz-hoja--abajo': esCelular }">
-      <div v-if="esCelular" class="nz-hoja__agarre" aria-hidden="true" />
+    <div class="nz-hoja">
       <header v-if="titulo || $slots.encabezado" class="nz-hoja__encabezado">
         <slot name="encabezado">
           <h2 class="nz-hoja__titulo">{{ titulo }}</h2>
@@ -26,10 +24,9 @@
 </template>
 
 <script setup>
-// Hoja inferior (ESTILOS_NAIPAZO.md, 5.2): en el celular sale desde abajo con radio de 24 px arriba y un borde
-// superior celeste fino; en tablet y escritorio es un diálogo centrado con el mismo aspecto.
-import { computed, ref } from 'vue';
-import { useQuasar } from 'quasar';
+// Diálogo de Naipazo: flota centrado en la pantalla (también en el celular, por decisión del dueño, en lugar de la
+// hoja inferior de la guía 5.2), con el borde celeste iluminado alrededor y radio de 24 px.
+import { ref } from 'vue';
 
 defineOptions({ inheritAttrs: false });
 defineProps({
@@ -40,43 +37,23 @@ defineProps({
 const emit = defineEmits(['update:modelValue', 'hide']);
 const dialogo = ref(null);
 defineExpose({ show: () => dialogo.value?.show(), hide: () => dialogo.value?.hide() });
-const $q = useQuasar();
-const esCelular = computed(() => $q.screen.lt.sm);
 </script>
 
 <style scoped>
 .nz-hoja {
-  width: min(520px, 100vw);
-  max-height: 90dvh;
+  width: min(520px, calc(100vw - 32px));
+  max-height: calc(100dvh - 48px);
   display: flex;
   flex-direction: column;
   background: var(--noche-2);
   color: var(--texto);
-  border: 1px solid var(--linea);
-  border-top: 1px solid var(--celeste);
+  border: 1px solid var(--celeste);
   border-radius: var(--radio-hoja);
+  box-shadow: var(--glow-celeste-2) !important;
   overflow: hidden;
 }
 
-.nz-hoja--abajo {
-  width: 100vw;
-  max-width: 100vw;
-  border-radius: var(--radio-hoja) var(--radio-hoja) 0 0;
-  border-left: 0;
-  border-right: 0;
-  border-bottom: 0;
-  padding-bottom: env(safe-area-inset-bottom);
-}
-
-.nz-hoja__agarre {
-  width: 40px;
-  height: 4px;
-  margin: 8px auto 0;
-  border-radius: 999px;
-  background: var(--linea);
-}
-
-.nz-hoja__encabezado { padding: 16px 20px 4px; }
+.nz-hoja__encabezado { padding: 20px 20px 4px; }
 
 .nz-hoja__titulo {
   margin: 0;
@@ -86,7 +63,7 @@ const esCelular = computed(() => $q.screen.lt.sm);
 }
 
 .nz-hoja__cuerpo {
-  padding: 12px 20px;
+  padding: 12px 20px 20px;
   overflow-y: auto;
 }
 
@@ -95,9 +72,6 @@ const esCelular = computed(() => $q.screen.lt.sm);
   flex-wrap: wrap;
   justify-content: flex-end;
   gap: 8px;
-  padding: 12px 20px 20px;
+  padding: 0 20px 20px;
 }
-
-.nz-hoja--abajo .nz-hoja__acciones { flex-direction: column-reverse; }
-.nz-hoja--abajo .nz-hoja__acciones > * { width: 100%; }
 </style>

@@ -94,43 +94,7 @@ a:hover { color: var(--celeste-vivo); }
   font-weight: 600;
 }
 
-/* Pantallas de acceso: el detalle se hace en N2 */
-.tr-auth-shell {
-  min-height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 24px 16px;
-}
-
-.tr-auth-card {
-  width: 100%;
-  max-width: 420px;
-  background: var(--noche-2);
-  border: 1px solid var(--linea);
-  border-radius: var(--radio-panel);
-  padding: 28px 22px;
-}
-
-.tr-auth-brand {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 18px;
-}
-
-.tr-auth-brand strong {
-  display: block;
-  font-family: var(--fuente-titulo);
-  font-size: 20px;
-  line-height: 1.1;
-}
-
-.tr-auth-brand span {
-  color: var(--texto-suave);
-  font-size: 14px;
-}
-
+/* Pantallas de acceso: el marco está en components/AuthMarco.vue */
 .tr-auth-footer {
   margin-top: 16px;
   text-align: center;

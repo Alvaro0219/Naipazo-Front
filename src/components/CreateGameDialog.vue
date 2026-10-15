@@ -35,28 +35,23 @@
             <NzSegmentado v-model="targetPoints" bloque aria-label="Puntos" :opciones="[{ label: 'A 15', value: 15 }, { label: 'A 30', value: 30 }]" />
           </div>
 
-          <div>
-            <q-select
-              v-model="amount"
-              :options="amountOptions"
-              :label="kind === 'tournament' ? 'Inscripción' : 'Apuesta'"
-              outlined
-              stack-label
-              emit-value
-              map-options
-              options-dense
-              :hint="amountHint"
-              :rules="[(v) => v <= (wallet.balance ?? 0) || 'No tenés fichas suficientes']"
-            />
-          </div>
+          <ApuestaSelector
+            v-model="amount"
+            :etiqueta="kind === 'tournament' ? 'Inscripción' : 'Apuesta'"
+            :saldo="wallet.balance ?? 0"
+            :maximo-servidor="config.maxBet"
+          />
 
-          <div v-if="kind === 'tournament'" class="tr-create__prize">
+          <!-- Premio en oro (10.3) -->
+          <div v-if="amount > 0" class="tr-create__prize">
             <Icono nombre="trofeo" :size="22" class="tr-create__trofeo" />
-            <span v-if="amount > 0">
-              El campeón se lleva <strong class="tr-num">{{ formatChips(prize) }}</strong> fichas
-              ({{ formatChips(amount) }} × {{ size }} jugadores).
+            <span>
+              {{ kind === 'tournament' ? 'El campeón se lleva' : mode === '2v2' ? 'Cada uno de la pareja ganadora se lleva' : 'El ganador se lleva' }}
+              <strong class="tr-num">{{ formatChips(prize) }} fichas</strong>.
             </span>
-            <span v-else>Torneo gratis: el campeón suma la victoria en su perfil.</span>
+          </div>
+          <div v-else class="tr-create__hint">
+            {{ kind === 'tournament' ? 'Torneo gratis: el campeón suma la victoria en su perfil.' : 'Mesa gratis: no se juegan fichas.' }}
           </div>
 
           <ChipsNotice compact />
@@ -81,6 +76,7 @@
 <script setup>
 import { computed, ref, watch } from 'vue';
 import { useQuasar } from 'quasar';
+import ApuestaSelector from './ApuestaSelector.vue';
 import ChipsNotice from './ChipsNotice.vue';
 import { useGameConfig } from '../composables/useGameConfig.js';
 import { createRoom, createTournament } from '../services/api.js';
@@ -109,28 +105,8 @@ const amount = ref(0); // 0 = gratis
 const loading = ref(false);
 let uuid = crypto.randomUUID();
 
-const STEP = 500;
-
-// Gratis y de 500 en 500 hasta el máximo; las que superan tu saldo aparecen deshabilitadas
-const amountOptions = computed(() => {
-  const list = [{ label: 'Gratis', value: 0 }];
-  for (let value = STEP; value <= config.value.maxBet; value += STEP) {
-    list.push({ label: `${formatChips(value)} fichas`, value, disable: value > (wallet.balance ?? 0) });
-  }
-  return list;
-});
-
 const pot = computed(() => amount.value * (kind.value === 'tournament' ? size.value : 2));
 const prize = computed(() => pot.value - Math.floor(pot.value * (config.value.houseRate || 0)));
-
-const amountHint = computed(() => {
-  if (!amount.value) return kind.value === 'tournament' ? 'Torneo gratis: no se juegan fichas.' : 'Mesa gratis: no se juegan fichas.';
-  return kind.value === 'tournament'
-    ? `Tenés ${formatChips(wallet.balance ?? 0)} fichas. La inscripción se cobra al crear el torneo.`
-    : mode.value === '2v2'
-      ? `Tenés ${formatChips(wallet.balance ?? 0)} fichas. Cada uno de la pareja ganadora se lleva ${formatChips(prize.value)}.`
-      : `Tenés ${formatChips(wallet.balance ?? 0)} fichas. El ganador se lleva ${formatChips(prize.value)}.`;
-});
 
 // Un uuid por intento de creación: reintentar el mismo envío no crea una partida duplicada
 watch(() => props.modelValue, (open) => {
@@ -143,6 +119,11 @@ watch([kind, mode], () => { uuid = crypto.randomUUID(); });
 
 async function submit() {
   if (!(await formRef.value.validate())) return;
+  // El saldo pudo bajar después de elegir el monto (por ejemplo, otra pestaña)
+  if (amount.value > (wallet.balance ?? 0)) {
+    $q.notify({ type: 'negative', message: 'No te alcanzan las fichas para ese monto.' });
+    return;
+  }
   const chips = amount.value;
   loading.value = true;
   try {

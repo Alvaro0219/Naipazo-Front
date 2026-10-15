@@ -22,6 +22,7 @@ const ICONO_POR_TONO = { celeste: 'info', verde: 'ok', rojo: 'alerta', ambar: 'r
 <style scoped>
 .nz-aviso {
   display: flex;
+  flex-wrap: wrap;
   align-items: flex-start;
   gap: 12px;
   padding: 12px 14px;
@@ -39,6 +40,7 @@ const ICONO_POR_TONO = { celeste: 'info', verde: 'ok', rojo: 'alerta', ambar: 'r
 .nz-aviso--ambar { --nz-aviso-color: var(--ambar); }
 
 .nz-aviso__icono { color: var(--nz-aviso-color); margin-top: 1px; }
-.nz-aviso__texto { flex: 1; min-width: 0; }
-.nz-aviso__accion { flex-shrink: 0; align-self: center; }
+.nz-aviso__texto { flex: 1 1 180px; min-width: 0; }
+/* Si no entra al costado, la acción baja a su propia línea, alineada a la derecha */
+.nz-aviso__accion { flex-shrink: 0; align-self: center; margin-left: auto; }
 </style>

@@ -1,4 +1,3 @@
-import { randomUUID } from 'node:crypto';
 import { expect, test } from '@playwright/test';
 import { api, openAs, playUntilFinished, registerUser } from './helpers.js';
 
@@ -8,13 +7,22 @@ test('mesa con apuesta: un rival se une desde el lobby, partida completa y revan
   const host = await openAs(browser, hostSession);
   const guest = await openAs(browser, guestSession);
 
-  const room = await api(request, hostSession, 'POST', '/rooms', { uuid: randomUUID(), targetPoints: 15, bet: 100 });
-  await host.page.goto(`/mesa/${room.room.id}`);
+  // El anfitrión crea la mesa desde el lobby: apuesta con el chip rápido de 500 (ESTILOS_NAIPAZO.md, 10.3)
+  await host.page.goto('/');
+  await host.page.getByRole('button', { name: 'Crear partida' }).click();
+  const crear = host.page.locator('.q-dialog');
+  await crear.getByRole('button', { name: '500', exact: true }).click();
+  await expect(crear.locator('.tr-apuesta__valor')).toContainText('500');
+  await crear.getByRole('button', { name: 'Crear mesa' }).click();
   await expect(host.page.getByText('Esperando un rival…')).toBeVisible();
+  const roomId = host.page.url().split('/mesa/')[1];
+  const code = (await host.page.locator('.tr-table__code').textContent()).trim();
+  const room = { room: { id: roomId, code } };
 
   // El rival la encuentra en el lobby y se une
   await guest.page.goto('/');
-  const item = guest.page.locator('.tr-game', { hasText: room.room.code });
+  // En el lobby la mesa se reconoce por el anfitrión (el código solo se usa para las privadas)
+  const item = guest.page.locator('.tr-game', { hasText: hostSession.user.username });
   await item.getByRole('button', { name: 'Unirme' }).click();
   // Con apuesta pide confirmación
   await guest.page.locator('.q-dialog').getByRole('button', { name: 'Jugar' }).click();
@@ -26,10 +34,10 @@ test('mesa con apuesta: un rival se une desde el lobby, partida completa y revan
   await expect(host.page.locator('.tr-result')).toContainText('¡Ganaste la partida!');
   await expect(guest.page.locator('.tr-result')).toBeVisible();
 
-  // Pozo: 200 al ganador (100 + 100), el perdedor pierde lo apostado
+  // Pozo: 1.000 al ganador (500 + 500), el perdedor pierde lo apostado
   const hostWallet = await api(request, hostSession, 'GET', '/wallet');
   const guestWallet = await api(request, guestSession, 'GET', '/wallet');
-  expect(hostWallet.balance - guestWallet.balance).toBe(200);
+  expect(hostWallet.balance - guestWallet.balance).toBe(1000);
 
   // Revancha: uno la pide, el otro la acepta y los dos van a la mesa nueva
   await host.page.getByRole('button', { name: 'Revancha' }).click();

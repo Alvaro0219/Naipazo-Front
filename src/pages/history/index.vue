@@ -26,11 +26,13 @@
         <template #item="{ row }">
           <div class="col-12">
             <router-link :to="`/historial/${row.id}`" class="tr-match">
-              <span class="tr-match__result" :class="`tr-match__result--${row.result}`">
-                {{ RESULT_LABELS[row.result] }}
-              </span>
               <div class="tr-match__main">
-                <strong>{{ opponentsLabel(row) }}</strong>
+                <div class="tr-match__titulo">
+                  <span class="tr-match__result" :class="`tr-match__result--${row.result}`">
+                    {{ RESULT_LABELS[row.result] }}
+                  </span>
+                  <strong>{{ opponentsLabel(row) }}</strong>
+                </div>
                 <span class="tr-match__meta">
                   <template v-if="row.tournamentId">Torneo · </template><template v-if="row.config.mode === '2v2'">2 vs 2 · </template><template v-if="row.config.isPrivate">Privada · </template>A {{ row.config.targetPoints }} · {{ formatDateTime(row.endedAt) }}
                   <template v-if="resultDetail(row)"> · {{ resultDetail(row) }}</template>
@@ -78,8 +80,8 @@ onMounted(reload);
 .tr-match {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px 14px;
+  gap: 10px;
+  padding: 10px 12px;
   margin-bottom: 8px;
   border-radius: var(--radio-panel);
   background: var(--noche-2);
@@ -92,10 +94,16 @@ onMounted(reload);
 
 .tr-match__flecha { color: var(--texto-suave); }
 
+.tr-match__titulo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
 .tr-match__result {
   flex-shrink: 0;
-  width: 84px;
-  padding: 4px 0;
+  padding: 2px 8px;
   border-radius: 999px;
   border: 1px solid var(--linea);
   color: var(--texto-suave);
@@ -112,6 +120,7 @@ onMounted(reload);
   min-width: 0;
   display: flex;
   flex-direction: column;
+  gap: 2px;
 }
 
 .tr-match__main strong {
@@ -140,7 +149,8 @@ onMounted(reload);
   font-weight: 600;
 }
 
-@media (max-width: 420px) {
-  .tr-match__result { width: 72px; }
+/* En el celular toda la fila es el enlace: la flecha sobra */
+@media (max-width: 480px) {
+  .tr-match__flecha { display: none; }
 }
 </style>

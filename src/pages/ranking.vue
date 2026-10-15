@@ -1,127 +1,177 @@
 <template>
   <div class="tr-page-shell">
     <header class="tr-page-header">
-      <h1>Ranking</h1>
-      <p>Los que más ganan en la mesa. Las salas privadas no cuentan.</p>
+      <h1>Ranking de {{ monthName }}</h1>
+      <p>Fichas ganadas este mes en mesas y torneos. Las salas privadas no cuentan.</p>
     </header>
-
-    <div class="tr-ranking-filters">
-      <NzSegmentado
-        v-model="filters.by"
-        aria-label="Criterio"
-        :opciones="[{ label: 'Partidas ganadas', value: 'won' }, { label: 'Fichas ganadas', value: 'chips' }]"
-      />
-      <NzSegmentado v-model="filters.mode" aria-label="Modo" :opciones="[{ label: '1 vs 1', value: '1v1' }, { label: '2 vs 2', value: '2v2' }]" />
-      <NzSegmentado v-model="filters.period" aria-label="Período" :opciones="PERIODS" />
-    </div>
 
     <LoadingState
       :loading="firstLoad"
-      :empty="!firstLoad && pagination.rowsNumber === 0"
-      empty-label="Todavía no hay nadie en este ranking."
+      :empty="!firstLoad && total === 0"
+      empty-label="Todavía nadie jugó este mes. ¡Estrenalo vos!"
       empty-icon="medalla"
+      :skeleton-rows="5"
+      :skeleton-height="52"
     >
-      <q-table
-        v-model:pagination="pagination"
-        :rows="rows"
-        :columns="columns"
-        row-key="userId"
-        :loading="loading"
-        :rows-per-page-options="[20, 50]"
-        flat
-        class="tr-section-card tr-ranking-table"
-        :table-row-class-fn="(row) => (row.userId === auth.user?.id ? 'tr-ranking-me' : '')"
-        @request="onRequest"
-      >
-        <template #body-cell-rank="props">
-          <q-td :props="props">
-            <span class="tr-rank" :class="props.value <= 3 ? `tr-rank--${props.value}` : ''">{{ props.value }}</span>
-          </q-td>
-        </template>
-      </q-table>
-    </LoadingState>
+      <ol class="tr-ranking" :aria-busy="loading">
+        <li
+          v-for="row in rows"
+          :key="row.userId"
+          class="tr-ranking__fila"
+          :class="{ 'tr-ranking__fila--vos': row.userId === auth.user?.id, 'tr-ranking__fila--primero': row.rank === 1 }"
+        >
+          <span class="tr-ranking__puesto tr-num">{{ row.rank }}</span>
+          <Avatar :nombre="row.username" :size="32" />
+          <span class="tr-ranking__nombre">
+            <strong>{{ row.username }}</strong>
+            <small v-if="row.userId === auth.user?.id">(vos)</small>
+          </span>
+          <span class="tr-ranking__fichas tr-num" :class="row.chips < 0 ? 'nz-monto--suave' : 'nz-monto--texto'">
+            {{ formatSignedChips(row.chips) }}
+            <span class="nz-sr">fichas</span>
+          </span>
+        </li>
+      </ol>
 
-    <p class="tr-ranking-note">
-      {{ filters.by === 'chips'
-        ? 'Fichas ganadas: ganancia neta en mesas con apuesta.'
-        : 'A igual cantidad de partidas ganadas, va primero quien jugó menos.' }}
-    </p>
+      <nav v-if="totalPages > 1" class="tr-ranking__paginas" aria-label="Páginas del ranking">
+        <NzBoton variante="texto" icono="volver" label="Anterior" :disable="page <= 1 || loading" @click="load(page - 1)" />
+        <span class="tr-num">Página {{ page }} de {{ totalPages }}</span>
+        <NzBoton variante="texto" icono-derecha="avanzar" label="Siguiente" :disable="page >= totalPages || loading" @click="load(page + 1)" />
+      </nav>
+    </LoadingState>
   </div>
 </template>
 
 <script setup>
-import { computed, onMounted, reactive } from 'vue';
+// Ranking (ESTILOS_NAIPAZO.md, 10.7, con la decisión del dueño): mes calendario, por fichas ganadas, sin filtros.
+// Puesto 1 con número y borde dorados; tu fila con borde celeste y "(vos)"; las demás con separadores.
+import { computed, onMounted, ref } from 'vue';
 import { useQuasar } from 'quasar';
 import LoadingState from '../components/LoadingState.vue';
-import { usePaginatedList } from '../composables/usePaginatedList.js';
-import { fetchRanking } from '../services/api.js';
+import { fetchMonthlyRanking } from '../services/api.js';
 import { useAuthStore } from '../stores/auth.js';
-import { formatChips } from '../utils/format.js';
+import { formatSignedChips } from '../utils/format.js';
 
-const PERIODS = [
-  { label: 'Siempre', value: 'all' },
-  { label: 'Últimos 30 días', value: 'month' },
-  { label: 'Últimos 7 días', value: 'week' }
-];
-
+const LIMIT = 20;
 const $q = useQuasar();
 const auth = useAuthStore();
-// Tablas separadas por modo; las salas privadas no cuentan en ninguna
-const filters = reactive({ by: 'won', period: 'all', mode: '1v1' });
 
-const { rows, loading, firstLoad, pagination, onRequest, reload } = usePaginatedList({
-  fetchFn: fetchRanking,
-  filters: computed(() => ({ ...filters })),
-  label: 'el ranking'
-});
+const rows = ref([]);
+const total = ref(0);
+const page = ref(1);
+const monthStart = ref(null);
+const loading = ref(false);
+const firstLoad = ref(true);
 
-const columns = computed(() => {
-  const base = [
-    { name: 'rank', label: '#', field: 'rank', align: 'left', style: 'width: 48px' },
-    { name: 'username', label: 'Jugador', field: 'username', align: 'left' }
-  ];
-  if (filters.by === 'chips') {
-    return [...base, { name: 'chips', label: 'Fichas', field: 'chips', align: 'right', format: formatChips, classes: 'tr-num' }];
+const totalPages = computed(() => Math.max(1, Math.ceil(total.value / LIMIT)));
+// Nombre del mes en hora de Argentina (el servidor manda el comienzo del mes)
+const monthName = computed(() => new Intl.DateTimeFormat('es-AR', { month: 'long', timeZone: 'America/Argentina/Buenos_Aires' })
+  .format(monthStart.value ? new Date(monthStart.value) : new Date()));
+
+async function load(next = 1) {
+  loading.value = true;
+  try {
+    const data = await fetchMonthlyRanking({ page: next, limit: LIMIT });
+    rows.value = data.items;
+    total.value = data.pagination.total;
+    page.value = next;
+    monthStart.value = data.month?.start ?? null;
+  } catch (e) {
+    $q.notify({ type: 'negative', message: e.message || 'No se pudo cargar el ranking' });
+  } finally {
+    loading.value = false;
+    firstLoad.value = false;
   }
-  const cols = [...base, { name: 'won', label: 'Ganadas', field: 'won', align: 'right', classes: 'tr-num' }];
-  if (!$q.screen.lt.sm) cols.push({ name: 'played', label: 'Jugadas', field: 'played', align: 'right', classes: 'tr-num' });
-  return cols;
-});
+}
 
-onMounted(reload);
+onMounted(() => load(1));
 </script>
 
 <style scoped>
-.tr-ranking-filters {
+.tr-ranking {
+  list-style: none;
+  margin: 0;
+  padding: 4px;
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
+  flex-direction: column;
+  border-radius: var(--radio-panel);
+  background: var(--noche-2);
+  border: 1px solid var(--linea);
 }
 
-.tr-ranking-table { padding: 4px 8px; }
+.tr-ranking__fila {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 56px;
+  padding: 8px 12px;
+  border: 1.5px solid transparent;
+  border-radius: var(--radio-boton);
+}
 
-:deep(.tr-ranking-me) td { font-weight: 700; }
-:deep(.tr-ranking-me) td:first-child { box-shadow: inset 2px 0 0 var(--celeste); }
+/* Separadores finos entre filas (no alrededor de la tuya ni de la siguiente) */
+.tr-ranking__fila + .tr-ranking__fila:not(.tr-ranking__fila--vos) { box-shadow: inset 0 1px 0 var(--linea); }
+.tr-ranking__fila--vos + .tr-ranking__fila { box-shadow: none; }
 
-.tr-rank {
+/* Tu fila: borde celeste completo */
+.tr-ranking__fila--vos {
+  border-color: var(--celeste);
+  background: var(--noche-3);
+}
+
+.tr-ranking__puesto {
+  flex-shrink: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
-  font-weight: 800;
   color: var(--texto-suave);
+  font-family: var(--fuente-titulo);
+  font-weight: 700;
 }
 
-/* Puesto 1 en oro (10.7): número y borde dorados */
-.tr-rank--1 { border: 1.5px solid var(--oro); color: var(--oro); }
+/* Puesto 1: número y borde dorados */
+.tr-ranking__fila--primero .tr-ranking__puesto {
+  border: 1.5px solid var(--oro);
+  color: var(--oro);
+}
 
-.tr-ranking-note {
-  margin: 0;
-  color: var(--texto-suave);
+.tr-ranking__nombre {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.tr-ranking__nombre strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tr-ranking__nombre small {
+  flex-shrink: 0;
+  color: var(--celeste);
   font-size: 13px;
+  font-weight: 600;
+}
+
+.tr-ranking__fichas {
+  flex-shrink: 0;
+  font-family: var(--fuente-titulo);
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.tr-ranking__paginas {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  color: var(--texto-suave);
+  font-size: 14px;
 }
 </style>

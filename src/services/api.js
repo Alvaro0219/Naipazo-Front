@@ -266,8 +266,9 @@ export async function fetchMatch(matchId) {
 }
 
 /** params: { by: 'won' | 'chips', period: 'all' | 'month' | 'week', page, limit } */
-export async function fetchRanking(params) {
-  const { data, status } = await api.get('/ranking', { params });
+/** Ranking del mes calendario por fichas ganadas: { items, pagination, month: { start, end } } */
+export async function fetchMonthlyRanking(params) {
+  const { data, status } = await api.get('/ranking/month', { params });
   return unwrap(data, 'No se pudo cargar el ranking', status);
 }
 
